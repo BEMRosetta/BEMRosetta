@@ -2122,6 +2122,7 @@ void MainBEM::OnFill1st() {
 void MapMeshes::Init(int _idx, int _ib, double _tolerance) {
 	idx = _idx;
 	ib = _ib;
+	tolerance = _tolerance;
 	
 	CtrlLayout(*this);
 	Title(F(t_("Select meshes and map the %d%s body properties"), ib+1, Ordinal(ib+1)));

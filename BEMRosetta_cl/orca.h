@@ -1035,7 +1035,7 @@ private:
 	
 	template <class T>
 	void LoadDiffractionPanelGeometry(Hydro &hy, int sz, const OrcaFactors &factor, int Np, UVector<int> &panelId, UVector<int> &panelIb) {	
-		Buffer<T> panels(Np);
+		Buffer<T> panels((size_t)Np);
 		if (GetDiffractionOutput(wave, dotPanelGeometry, &sz, panels.begin()))
 			throwError("Load dotPanelGeometry 2");
 		

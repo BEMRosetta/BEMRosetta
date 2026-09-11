@@ -2434,12 +2434,12 @@ private:
         velocity    = Tensor<double, 4>(nt,3,ny,nz);
     	twrVelocity = Tensor<double, 3>(nt,3,ntwr);
   
-		Buffer<T> data(nv);
-		Buffer<T> datat(nvTwr);
+		Buffer<T> data((size_t)nv);
+		Buffer<T> datat((size_t)nvTwr);
 		int fmtSz = sizeof(T);
 		for (int it = 0; it < nt; ++it) {
 			// get the grid points
-			file.Read(data, fmtSz*nv); // read the velocity components for one time step
+			file.Read(data, (size_t)(fmtSz*nv)); // read the velocity components for one time step
 			
 			int ip = 0;
 	    	for (int iz = 0; iz < nz; ++iz) {
@@ -2454,7 +2454,7 @@ private:
 	    	}
 			// get the tower points
 			if (ntwr > 0) {
-				file.Read(datat, fmtSz*nvTwr);		// read the velocity components for the tower
+				file.Read(datat, (size_t)(fmtSz*nvTwr));		// read the velocity components for the tower
 
 	            for (int k = 0; k < 3; ++k) {      // scale the data
 	                for (int itw = 0; itw < ntwr; ++itw) {
@@ -2477,8 +2477,8 @@ private:
 	    int nv      = 3*nPts;               // the size of one time step
 	    int nvTwr   = 3*ntwr;
 	
-		Buffer<T> data(nv);
-		Buffer<T> datat(nvTwr);
+		Buffer<T> data((size_t)nv);
+		Buffer<T> datat((size_t)nvTwr);
 		int fmtSz = sizeof(T);
 		
 		for (int it = 0; it < nt; ++it) {
@@ -2492,7 +2492,7 @@ private:
 	                }
 	            }
 	        }			
-			file.Write(data.begin(), fmtSz*nv);
+			file.Write(data.begin(), (size_t)(fmtSz*nv));
 
 			if (ntwr > 0) {
 	            for (int k = 0; k < 3; ++k)      // scale the data
@@ -2501,7 +2501,7 @@ private:
 	                    						 	  std::numeric_limits<T>::lowest(), 
 	                    						 	  std::numeric_limits<T>::max());
 
-	            file.Write(datat.begin(), fmtSz*nvTwr);		// read the velocity components for the tower
+	            file.Write(datat.begin(), (size_t)(fmtSz*nvTwr));		// read the velocity components for the tower
 			}
 		}		
 	}

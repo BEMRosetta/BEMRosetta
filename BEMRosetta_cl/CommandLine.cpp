@@ -723,7 +723,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 						} else if (param == "-savecase") {
 							if (Bem().hydros.size() < bemid) 
 								throw Exc(F(t_("Model %d is not loaded"), bemid));
-							Hydro &hy = Bem().hydros[bemid];
+							//Hydro &hy = Bem().hydros[bemid];
 							String folder;
 							String solver;
 							bool bin = false, y0z = false, x0z = false, withMesh = false, withPotentials = false;
@@ -741,7 +741,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									folder.Replace("%DESKTOP%", GetDesktopFolder());
 								} else if (pparam == "solver") {
 									CheckIfAvailableArg(command, ++ic, "solver"); 
-									String solver = ToLower(command[ic]);
+									solver = ToLower(command[ic]);
 								} else if (pparam == "bin")
 									bin = true;
 								else if (pparam == "symyz") 
@@ -789,7 +789,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							CheckIfAvailableArg(command, ic+1, "-bodyparams");
 							if (Bem().hydros.size() < bemid) 
 								throw Exc(F(t_("Model %d is not loaded"), bemid));
-							Hydro &hy = Bem().hydros[bemid];
+							//Hydro &hy = Bem().hydros[bemid];
 							
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								/*if (Bem().hydros[bemid].dt.msh.size() < bembodyid) 

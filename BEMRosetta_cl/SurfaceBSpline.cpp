@@ -683,10 +683,10 @@ void SurfaceBSpline::Tessellate(int nu, int nv, Surface& surf) {
 		double du = (umax - umin)/nu;
 		double dv = (vmax - vmin)/nv;
 		
-		int nU = patch.GetNUBasis();
-		int nV = patch.GetNVBasis();
-		int p  = patch.GetUDegree();
-		int q  = patch.GetVDegree();
+		//int nU = patch.GetNUBasis();
+		//int nV = patch.GetNVBasis();
+		//int p  = patch.GetUDegree();
+		//int q  = patch.GetVDegree();
 		
 		s.nodes.SetCount((nu + 1)*(nv + 1));
 		for (int j = 0; j <= nv; j++) {

@@ -1544,7 +1544,7 @@ void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, b
 	
 	UVector<UVector<int>> idpan(idms.size());				// For each mesh, which panels from ib apply
 	const UVector<Panel> &pans = dt.msh[ib].dt.mesh.panels;
-	double maxalld = 0;
+	//double maxalld = 0;
 	int numUnMapped = 0;
 	for (int ip = 0; ip < pans.size(); ++ip) {				// For each panel of this Hydro
 		const Point3D &p = pans[ip].centroidPaint;			// looks for the Body in idms

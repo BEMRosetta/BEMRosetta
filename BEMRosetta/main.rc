@@ -1,15 +1,10 @@
 #if defined(flagGUI)
 
-#include "resource.h"
-
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ESN)
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
-#pragma code_page(1252)
+1 ICON "BEMRosetta.ico"
 
-APP ICON "BEMRosetta.ico"
-
-VS_VERSION_INFO VERSIONINFO
+1 VERSIONINFO
  FILEVERSION 0,1,0,10
  PRODUCTVERSION 0,0,0,0
  FILEFLAGSMASK 0x0L
@@ -24,14 +19,14 @@ VS_VERSION_INFO VERSIONINFO
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
-        BLOCK "0c0a04b0"
+        BLOCK "080904E4"
         BEGIN
-            VALUE "Comments", "BEMRosetta"
+            VALUE "Comments", "Hydrodynamic BEM files manager"
             VALUE "CompanyName", "BEMRosetta"
-            VALUE "FileDescription", "BEMRosetta"
+            VALUE "FileDescription", "Hydrodynamic BEM files manager"
             VALUE "FileVersion", "00.01.00.0010"
             VALUE "InternalName", "BEMRosetta"
-            VALUE "LegalCopyright", "(C) 2021-2025, BEMRosetta, All rights reserved"
+            VALUE "LegalCopyright", "(C) 2021-2026, BEMRosetta, All rights reserved"
             VALUE "OriginalFilename", "BEMRosetta.exe"
             VALUE "ProductName", "BEMRosetta"
             VALUE "ProductVersion", "00.01.00.0010"
@@ -39,7 +34,7 @@ BEGIN
     END
     BLOCK "VarFileInfo"
     BEGIN
-        VALUE "Translation", 0xc0a, 1200
+        VALUE "Translation", 0x809, 1252
     END
 END
 

@@ -7,7 +7,7 @@
 
 void HydroStar::SaveCase(String folder, bool /*withPotentials*/, bool x0z, bool y0z, 
 				const UVector<bool> &listDOF, bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const {
-	bool onlyMeanDrift = qtfType > 10;					// INTEGRATE THIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//bool onlyMeanDrift = qtfType > 10;					// INTEGRATE THIS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	qtfType %= 10;
 	
 	if (!DirectoryCreateX(folder))
@@ -24,7 +24,7 @@ void HydroStar::SaveCase(String folder, bool /*withPotentials*/, bool x0z, bool 
 		String dest = AFX(folder, F("Body_%d.hst", ib+1));
 		Body::SaveAs(dt.msh[ib], dest, Body::HYDROSTAR_HST, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 		if (!autoQTF && qtfType == 7) {
-			String dest = AFX(folder, F("Body_cs%d.hst", ib+1));
+			dest = AFX(folder, F("Body_cs%d.hst", ib+1));
 			Body::SaveAs(dt.css[ib], dest, Body::HYDROSTAR_HST, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 		}
 	}

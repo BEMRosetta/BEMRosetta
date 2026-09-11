@@ -110,7 +110,7 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		            file.SeekCur(5*sizeof(int16));    // unnecessary lines
 		    nz    = file.Read<int16>();               // 1000 times number of points in vertical direction, max 32
 		    ny    = file.Read<int16>();               // 1000 times the number of points in horizontal direction, max 32
-		    file.SeekCur(3*(-nffc-1)*sizeof(int16)); 
+		    file.SeekCur(int64(3*(-nffc-1)*sizeof(int16))); 
 		
 		    // convert the integers to real numbers 
 		    nffc  = -nffc;
@@ -245,9 +245,9 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		else
 			Arange(y_ix, 0, ny-1, 1);
 		
-		Buffer<int16> v(nv);
+		Buffer<int16> v((size_t)nv);
 		for (int it = 0; it < nt; ++it) {
-		    file.Read(v, nv*sizeof(int16));
+		    file.Read(v, (size_t)(nv*sizeof(int16)));
 		    
 		    int cnt2 = 0;
 		    for (int iz = 0; iz < nz; ++iz)

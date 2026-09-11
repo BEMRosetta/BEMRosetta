@@ -1395,9 +1395,9 @@ bool Wamit::Load_frc1_3(String fileName, int ib) {
  	
 	f.GetLine();			// Title
 	f.GetLine();			// IOPTN
-	bool csf = false;
+	//bool csf = false;
 	if (f.GetInt(6) != 0) {
-		csf = true;
+		//csf = true;
 		dt.css.SetCount(dt.Nb);
 	}
 	if (f.GetDouble(3) < 0)

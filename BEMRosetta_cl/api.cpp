@@ -334,7 +334,7 @@ String BMR_CFunctions_List(const String &include, bool isC) {
 				line.Replace("NOEXCEPT", "");	
 				line.Replace(";", "");	
 				line = Trim(line);
-				bool isvoid = line.StartsWith("void");
+				//bool isvoid = line.StartsWith("void");
 				int _pos = line.Find("_");
 				String retType = Trim(line.Left(_pos));
 				line = line.Mid(_pos);
@@ -578,7 +578,7 @@ void GetFunctionsList(const String &include, bool isC, UVector<String> &retTypes
 				line.Replace("NOEXCEPT", "");	
 				line.Replace(";", "");	
 				line = Trim(line);
-				bool isvoid = line.StartsWith("void");
+				//bool isvoid = line.StartsWith("void");
 				int _pos = line.Find("_");
 				retTypes << Trim(line.Left(_pos));
 				line = line.Mid(_pos);

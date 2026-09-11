@@ -288,7 +288,7 @@ void MainSolver::Init() {
 			idQTF = save.dropQTF.GetKey(idQTF);
 		save.dropQTF.Clear();
 		save.dropQTF.Add(0, t_("No"));
-		for (int i = 0; i < strlen(Hydro::bemInfo[solver].md); ++i) {
+		for (int i = 0; i < (int)strlen(Hydro::bemInfo[solver].md); ++i) {
 			char c = Hydro::bemInfo[solver].md[i];
 			if (c == '7')
 				save.dropQTF.Add(17, t_("Mean drift. Control surface/Middle field"));
@@ -297,7 +297,7 @@ void MainSolver::Init() {
 			else if (c == '9')
 				save.dropQTF.Add(19, t_("Mean drift. Pressure integration/Near field"));
 		}
-		for (int i = 0; i < strlen(Hydro::bemInfo[solver].qtf); ++i) {
+		for (int i = 0; i < (int)strlen(Hydro::bemInfo[solver].qtf); ++i) {
 			char c = Hydro::bemInfo[solver].qtf[i];
 			if (c == '7')
 				save.dropQTF.Add(7, t_("Control surface/Middle field"));

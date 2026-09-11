@@ -332,43 +332,43 @@ String FastOut::LoadOutb(String file, Function <bool(String, int)> Status) {
         TimeIncr = fin.Read<double>();  
     }
 
-	Buffer<float> ChanNames(NumChans);
-	Buffer<float> ChanUnits(NumChans);
+	Buffer<float> ChanNames((size_t)NumChans);
+	Buffer<float> ChanUnits((size_t)NumChans);
 	
 	Buffer<float> ColScl, ColOff;
 	Buffer<int32> TmpTimeArray;
 	if (FileType != FILETYPE::NoCompressWithoutTime) {
-		ColOff.Alloc(NumChans);
-		ColScl.Alloc(NumChans); 
+		ColOff.Alloc((size_t)NumChans);
+		ColScl.Alloc((size_t)NumChans); 
 
 		if (FileType == FILETYPE::WithTime) 
-			TmpTimeArray.Alloc(NumRecs);		
+			TmpTimeArray.Alloc((size_t)NumRecs);		
 	}
 
 	if (FileType != FILETYPE::NoCompressWithoutTime) {
-	    fin.Read(ColScl, 4*NumChans);	
-    	fin.Read(ColOff, 4*NumChans);
+	    fin.Read(ColScl, (size_t)(4*NumChans));	
+    	fin.Read(ColOff, (size_t)(4*NumChans));
 	}
 
 	int32 LenDesc = fin.Read<int32>();
 	
     StringBuffer DescStrB(LenDesc);
-    fin.Read(DescStrB, LenDesc);
+    fin.Read(DescStrB, (size_t)LenDesc);
     String DescStr = DescStrB;
 
 	parameters.SetCount(NumChans+1); 
 	parameters[0] = "Time";
-	Buffer<char> name(ChanLen2);
+	Buffer<char> name((size_t)ChanLen2);
 	for (int iChan = 0; iChan < NumChans+1; ++iChan) { 
-		fin.Read(name, ChanLen2); 	
+		fin.Read(name, (size_t)ChanLen2); 	
         parameters[iChan] = TrimBoth(String(name, ChanLen2));
     }
     
 	units.SetCount(NumChans+1);          		
 	units[0] = "s";
-	Buffer<char> unit(ChanLen2);
+	Buffer<char> unit((size_t)ChanLen2);
     for (int iChan = 0; iChan < NumChans+1; ++iChan) { 
-        fin.Read(unit, ChanLen2); 			
+        fin.Read(unit, (size_t)ChanLen2); 			
         units[iChan] = Replace(Replace(TrimBoth(String(unit, ChanLen2)), "(", ""), ")", "");
     }  
     
@@ -382,26 +382,26 @@ String FastOut::LoadOutb(String file, Function <bool(String, int)> Status) {
     
     Buffer<int32> bufferTime;
     if (FileType == FILETYPE::WithTime) {
-        bufferTime.Alloc(NumRecs);
-        fin.Read(bufferTime, 4*NumRecs); 
+        bufferTime.Alloc((size_t)NumRecs);
+        fin.Read(bufferTime, (size_t)(4*NumRecs)); 
     }
     
     Buffer<int16> bufferData;
     Buffer<double> bufferDataFloat;
     //int ip = 0;
     if (FileType == FILETYPE::NoCompressWithoutTime) {
-        bufferDataFloat.Alloc(NumChans); 
+        bufferDataFloat.Alloc((size_t)NumChans); 
         for (int idt = 0; idt < NumRecs; ++idt) {
-            fin.Read(bufferDataFloat, 8*NumChans);
+            fin.Read(bufferDataFloat, (size_t)(8*NumChans));
             if (Status && !(idt%5000) && !Status(F(t_("Loading '%s'"), ::GetFileName(file)), int((100*fin.GetPos())/sz)))
 				throw Exc(t_("Stop by user"));
 	    	for (int i = 0; i < NumChans; ++i) 
 		        dataOut[i+1][idt] = bufferDataFloat[i];
         }
     } else {
-	    bufferData.Alloc(NumChans);
+	    bufferData.Alloc((size_t)NumChans);
 	    for (int idt = 0; idt < NumRecs; ++idt) {
-	        fin.Read(bufferData, 2*NumChans); 	
+	        fin.Read(bufferData, (size_t)(2*NumChans)); 	
 	        if (Status && !(idt%5000) && !Status(F(t_("Loading '%s'"), ::GetFileName(file)), int((100*fin.GetPos())/sz)))
 				throw Exc(t_("Stop by user"));
 	    	for (int i = 0; i < NumChans; ++i) 
@@ -663,11 +663,11 @@ void FastOut::AfterLoad() {
 			Twr2Shft = cas.elastodyn.GetDouble("Twr2Shft");
 			TowerHt = cas.elastodyn.GetDouble("TowerHt");
 			for (int i = 0; i < cas.pointNames.size(); ++i)	{
-				int id = FindParam(cas.pointNames[i]);		// Search points in table in elastodyn.dat
-				if (id < 0)
+				int idd = FindParam(cas.pointNames[i]);		// Search points in table in elastodyn.dat
+				if (idd < 0)
 					pointParams << PointParam(cas.pointNames[i], cas.points[i], this);	// If not found it is added
 				else
-					pointParams[id].pos = cas.points[i];								// If found, the coordinates are overlapped
+					pointParams[idd].pos = cas.points[i];								// If found, the coordinates are overlapped
 			}
 		}
 		if (cas.hydrodyn.IsAvailable()) {
@@ -675,8 +675,8 @@ void FastOut::AfterLoad() {
 				if (aff.size() > 0) {
 					double ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
 					double ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
-					int id = FindParam("CF");
-					if (id < 0)
+					int idd = FindParam("CF");
+					if (idd < 0)
 						pointParams << PointParam("CF", Point3D(ptfmCOBxt, ptfmCOByt, 0), this);
 				}
 			} catch(...) {
@@ -756,16 +756,16 @@ void FastOut::AfterLoad() {
 			dataOut[c.id].SetCount(GetNumData());
 	}
 	for (int i = 0; i < pointParams.size(); ++i) {
-		int id = pointParams[i].id;
+		int idd = pointParams[i].id;
 		int iip = 0;
 		for (int ip = 0; ip < 3; ++ip)
-			dataOut[id + iip++].SetCount(GetNumData());
+			dataOut[idd + iip++].SetCount(GetNumData());
 		if (!www.IsEmpty())
 			for (int ip = 0; ip < 3; ++ip)
-				dataOut[id + iip++].SetCount(GetNumData());
+				dataOut[idd + iip++].SetCount(GetNumData());
 		if (!aaa.IsEmpty())
 			for (int ip = 0; ip < 3; ++ip)
-				dataOut[id + iip++].SetCount(GetNumData());
+				dataOut[idd + iip++].SetCount(GetNumData());
 	}
 	for (int idt = 0; idt < GetNumData(); ++idt) {
 		for (CalcParam *c : calcParams) {	
@@ -780,22 +780,22 @@ void FastOut::AfterLoad() {
 			acc = clone(aaa[idt]);
 		if (aff.size() > 0) {
 			for (int i = 0; i < pointParams.size(); ++i) {
-				int id = pointParams[i].id;
+				int idd = pointParams[i].id;
 				Point3D p = pointParams[i].Calc(idt);
 				int iip = 0;
 				for (int ip = 0; ip < 3; ++ip)
-					dataOut[id + iip++][idt] = p[ip];
+					dataOut[idd + iip++][idt] = p[ip];
 				if (!IsNull(vel)) {
 					Velocity6D v = clone(vel);
 					v.Translate(ppp[idt], p);
 					for (int ip = 0; ip < 3; ++ip)
-						dataOut[id + iip++][idt] = v.t[ip];
+						dataOut[idd + iip++][idt] = v.t[ip];
 				}
 				if (!IsNull(acc)) {
 					Acceleration6D a = clone(acc);
 					a.Translate(ppp[idt], p, vel);
 					for (int ip = 0; ip < 3; ++ip)
-						dataOut[id + iip++][idt] = a.t[ip];
+						dataOut[idd + iip++][idt] = a.t[ip];
 				}
 			}
 		}
@@ -826,12 +826,12 @@ void FastOut::AfterLoad() {
 			pointNames[lineId] << pointName;
 			pointId = pointNames[lineId].size() - 1;
 		}
-		FastOut::id3d &id = mooringPointIds[lineId][pointId];
+		FastOut::id3d &idd = mooringPointIds[lineId][pointId];
 		
 		switch(*lst[i].Last()) {
-		case 'X':	id.x = GetParameterX(lst[i]);	break;
-		case 'Y':	id.y = GetParameterX(lst[i]);	break;
-		case 'Z':	id.z = GetParameterX(lst[i]);	break;
+		case 'X':	idd.x = GetParameterX(lst[i]);	break;
+		case 'Y':	idd.y = GetParameterX(lst[i]);	break;
+		case 'Z':	idd.z = GetParameterX(lst[i]);	break;
 		}
 	}
 	for (int i = 0; i < lineNames.size(); ++i) {
@@ -855,9 +855,9 @@ void FastOut::AppendLine(int idline, FastOut &fst) {
 
 	int oldnum = dataOut.size();
 	dataOut.SetCount(oldnum + fst.dataOut.size() - 1);
-	for (int id = 1; id < fst.dataOut.size(); ++id) {
-		dataOut[oldnum + id - 1] = pick(fst.dataOut[id]);
-		dataOut[oldnum + id - 1].SetCount(dataOut[0].size(), Null);		// Crop
+	for (int idd = 1; idd < fst.dataOut.size(); ++idd) {
+		dataOut[oldnum + idd - 1] = pick(fst.dataOut[idd]);
+		dataOut[oldnum + idd - 1].SetCount(dataOut[0].size(), Null);		// Crop
 	}
 }
 
@@ -880,13 +880,13 @@ bool FastOut::IsEmpty() {
 
 int FastOut::GetParameterX(String param) const {
 	param = ToLower(param);
-	int id = Find(parametersd, param);
-	if (id < 0) {
-		id = syn.Find(param);
-		if (id >= 0)
-			id = Find(parametersd, syn[id]);
+	int idd = Find(parametersd, param);
+	if (idd < 0) {
+		idd = syn.Find(param);
+		if (idd >= 0)
+			idd = Find(parametersd, syn[idd]);
 	}
-	return id;
+	return idd;
 }
 
 UVector<int> FastOut::FindParameterMatch(String param) const {
@@ -1093,9 +1093,9 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 	// Does the real job
 	UVector<UVector<double>> fullData(params.params.size());
 	UVector<double> fullTime;
-	for (int i = 0; i < dataFast.size(); ++i) {
-		const FastOut &fast = dataFast[i];
-		if (Status && !Status(t_("Calculating"), int(100*(i+1.)/dataFast.size())))
+	for (int idata = 0; idata < dataFast.size(); ++idata) {
+		const FastOut &fast = dataFast[idata];
+		if (Status && !Status(t_("Calculating"), int(100*(idata+1.)/dataFast.size())))
 			throw Exc(t_("Stop by user"));
 				
 		EvalExprX exp;
@@ -1150,9 +1150,9 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 		    		name.Replace("\\", "$");
 					PostFixOperation op = exp.Get(GetEquation(name));
 					data.resize(idEnd - idBegin);
-					for (int i = 0; i < data.size(); ++i) {
-						idtime = i + idBegin;
-						data[i] = exp.Eval(op);
+					for (int ii = 0; ii < data.size(); ++ii) {
+						idtime = ii + idBegin;
+						data[ii] = exp.Eval(op);
 					}
 					id = 0;
 				} catch (...) {
@@ -1161,13 +1161,13 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				data = fast.GetVector(id).segment(idBegin, idEnd - idBegin);
 
 			if (id < 0) {
-				for (int i = 0; i < param.metrics.size(); i++) 
+				for (int ii = 0; ii < param.metrics.size(); ii++) 
 					t << "";
 			} else {
 				AppendX(data, fullData[ip]);
 
-				for (int i = 0; i < param.metrics.size(); i++) {
-					String str = param.metrics[i];
+				for (int ii = 0; ii < param.metrics.size(); ii++) {
+					String str = param.metrics[ii];
 					str.Replace("(", ",");
 					str.Replace(")", ",");
 					UVector<String> pars = Split(str, ",");
@@ -1236,10 +1236,10 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 						UVector<double> maxs;
 						int id0 = 0;
 						double t0 = time[0];
-						for (int i = 0; i < time.size(); ++i) {
-							if (time[i] - t0 >= deltaTime) {
-								maxs << data.segment(id0, i - id0 + 1).maxCoeff();
-								id0 = i+1;
+						for (int ii = 0; ii < time.size(); ++ii) {
+							if (time[ii] - t0 >= deltaTime) {
+								maxs << data.segment(id0, ii - id0 + 1).maxCoeff();
+								id0 = ii+1;
 								t0 = time[id0];
 							}
 						}
@@ -1353,10 +1353,10 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					UVector<double> maxs;
 					int id0 = 0;
 					double t0 = fullTime[0];
-					for (int i = 0; i < fullTime.size(); ++i) {
-						if (fullTime[i] - t0 >= deltaTime) {
-							maxs << d.segment(id0, i - id0 + 1).maxCoeff();
-							id0 = i+1;
+					for (int ii = 0; ii < fullTime.size(); ++ii) {
+						if (fullTime[ii] - t0 >= deltaTime) {
+							maxs << d.segment(id0, ii - id0 + 1).maxCoeff();
+							id0 = ii+1;
 							t0 = fullTime[id0];
 						}
 					}
@@ -1387,7 +1387,7 @@ void FASTCase::CreateFolderCase(String folder) {
 	Time t = GetSysTime();
 	
 	std::random_device rd;
-	int randomSeed = rd();
+	unsigned randomSeed = rd();
 	std::default_random_engine re(randomSeed);
 	std::mt19937 rng(randomSeed);
 	std::uniform_int_distribution<int> gen(0, 999); 

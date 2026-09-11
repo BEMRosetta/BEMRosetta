@@ -76,7 +76,7 @@ bool OrcaWave::Load_OW_YML() {
 	int ib = -1;
 	Point3D bodyMeshPosition;
 	Value3D bodyMeshAttitude;
-	bool originCM = false;
+	//bool originCM = false;
 	double mass;
 	Matrix3d inertia;
 	String bodyname;
@@ -85,7 +85,7 @@ bool OrcaWave::Load_OW_YML() {
 
 	YmlParser fy(in);
 
-	FileInLine::Pos fpos = in.GetPos();
+	//FileInLine::Pos fpos = in.GetPos();
 	
 	auto GetMsh = [&]()->Body& {
 		if (ib < 0)
@@ -942,7 +942,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	if (!bat.Open(fileBat))
 		throw Exc(F(t_("Impossible to open file '%s'"), fileBat));
 	bat << BatchStart();
-	const Point3D &c0 = dt.msh[0].dt.c0;
+	//const Point3D &c0 = dt.msh[0].dt.c0;
 	bat << F("%s -orca -numtries 10 -numthread %d -rw \"%s\" \"%s\"", exeName, numThreads, "OrcaWave.wave.yml", "OrcaWave.flex.yml");
 	bat << BatchEnd();
 	

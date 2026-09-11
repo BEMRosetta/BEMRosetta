@@ -698,7 +698,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "********************************************************************************\n"
 	<< "*********************************** DECK  6 ************************************\n"
 	<< "********************************************************************************\n";	
-	bool found0 = false, found180 = false;
+	//bool found0 = false, found180 = false;
 	UVector<double> head180;
 	for (int i = 0; i < head.size(); ++i) {
 		double hd = FixHeading_180(head[i]);

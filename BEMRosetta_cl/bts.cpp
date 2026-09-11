@@ -35,7 +35,7 @@ void BTSWind::LoadBTSHeader(FileInBinary &file, VectorXf &Vslope, VectorXf &Voff
         
     int nchar = file.Read<int32>();  // the number of characters in the description string, max 200, INT(4)
     StringBuffer str(nchar);
-    file.Read(str, nchar); 			 // the ASCII integer representation of the character string
+    file.Read(str, (size_t)nchar); 			 // the ASCII integer representation of the character string
     description = str;
 }
 	              
@@ -118,7 +118,7 @@ void BTSWind::SaveBTSHeader(FileOutBinary &file, VectorXf &Vslope, VectorXf &Vof
     
     int nchar = description.GetLength();
     file.Write(int32(nchar));
-    file.Write(description.begin(), nchar);
+    file.Write(description.begin(), (size_t)nchar);
 }
 
 String BTSWind::SaveBTS(String fileName, int fmtSz) const {

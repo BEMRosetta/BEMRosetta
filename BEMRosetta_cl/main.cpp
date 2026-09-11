@@ -294,6 +294,8 @@ CONSOLE_APP_MAIN
 BMR_Data &BMR();
 
 CONSOLE_APP_MAIN {
+	SetEnv("UPP_EXIT_PAUSE__", "0");
+	
 	const UVector<String>& command = CommandLine();
 	
 	BMR().Status = PrintStatus;

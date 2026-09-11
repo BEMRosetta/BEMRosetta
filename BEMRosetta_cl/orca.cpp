@@ -207,7 +207,7 @@ static String StringDuration(int64 duration) {
     }
 }
 
-void __stdcall Orca::DiffractionHandlerProc(THHANDLE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
+void __stdcall Orca::DiffractionHandlerProc(THHANDLE /*handle*/, LPCWSTR lpProgress, BOOL *lpCancel) {
 	Time tm = GetSysTime();
 	static int lastPerc = -1;
 	String msg = WideToString(lpProgress);
@@ -242,7 +242,7 @@ void __stdcall Orca::DiffractionHandlerProc(THHANDLE handle, LPCWSTR lpProgress,
 	*lpCancel = WhenPrint(F("Completed %2d%%. Estim. End: %s", perc, send) + F(". Estim. Duration: %s", StringDuration(duration))); 
 }
 
-void __stdcall Orca::StaticsHandlerProc(THHANDLE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
+void __stdcall Orca::StaticsHandlerProc(THHANDLE /*handle*/, LPCWSTR lpProgress, BOOL *lpCancel) {
 	String msg = WideToString(lpProgress);
 	*lpCancel = WhenPrint(msg);
 }
@@ -268,7 +268,7 @@ void __stdcall Orca::LicenceNotFoundHandler(int action, BOOL *lpAttemptReconnect
 	}
 }
 
-void __stdcall Orca::SimulationHandlerProc(THHANDLE handle, double simulationTime, double simulationStart, double simulationStop, BOOL *lpCancel) {
+void __stdcall Orca::SimulationHandlerProc(THHANDLE /*handle*/, double simulationTime, double simulationStart, double simulationStop, BOOL *lpCancel) {
 	Time tm = GetSysTime();
 	if (IsNull(startCalc)) {		// Time starts here. Statics calculation delay is discarded
 		startCalc = tm;
@@ -294,7 +294,7 @@ void __stdcall Orca::SimulationHandlerProc(THHANDLE handle, double simulationTim
 	*lpCancel = WhenPrint(F("Completed %2d%%. Estim. End: %s", 100.*elapsed/total, send) + F(". Estim. Duration: %s. Clk/Sim: %.1f", StringDuration(duration), sec/elapsed)); 
 }
 
-void __stdcall Orca::EnumerateObjectsProc(THHANDLE handle, const TObjectInfo *info) {
+void __stdcall Orca::EnumerateObjectsProc(THHANDLE /*handle*/, const TObjectInfo *info) {
 	objTypes << info->ObjectType;
 	WString str(info->ObjectName);
 	objNames << str.ToString();
@@ -425,8 +425,8 @@ bool Orca::InitVersion(String version) {
 		iversion = 0;
 		UVector<int> version0 = orcadata[0].GetVersion();
 		for (int i = 1; i < orcadata.size(); ++i) {
-			UVector<int> version = orcadata[i].GetVersion();
-			if (SoftwareDetails::IsHigherVersion(version, version0) > 0)	// Version are numbers separated by .
+			UVector<int> versionn = orcadata[i].GetVersion();
+			if (SoftwareDetails::IsHigherVersion(versionn, version0) > 0)	// Version are numbers separated by .
 				iversion = i;
 		}
 	} else {
@@ -526,13 +526,13 @@ double Orca::GetDouble(THHANDLE handle, const wchar_t *name, int id) {
 	return ret;
 }
 	
-String Orca::GetString(THHANDLE handle, const wchar_t *name, int id) {
+String Orca::GetString(THHANDLE /*handle*/, const wchar_t *name, int id) {
 	int status;
 		
 	int len = GetDataString(wave, name, -1, NULL, &status);
 	if (status != 0)
 		throwError(F("Load GetDataString %s", name));	
-	Buffer<wchar_t> rw(len);
+	Buffer<wchar_t> rw((size_t)len);
 	LPWSTR wcs = (LPWSTR)rw.begin();
 	GetDataString(wave, name, -1, wcs, &status);
 	if (status != 0)
@@ -567,7 +567,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	if (GetDiffractionOutput(wave, dotAngularFrequencies, &sz, NULL))
 		throwError("Load dotAngularFrequencies");	
 	
-	hy.dt.Nf = sz/sizeof(double);
+	hy.dt.Nf = sz/(int)sizeof(double);
 	hy.dt.w.SetCount(hy.dt.Nf);
 	if (GetDiffractionOutput(wave, dotAngularFrequencies, &sz, hy.dt.w.begin()))
 		throwError("Load dotAngularFrequencies 2");	
@@ -575,14 +575,14 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	if (GetDiffractionOutput(wave, dotHeadings, &sz, NULL))
 		throwError("Load dotHeadings");	
 	
-	hy.dt.Nh = sz/sizeof(double);
+	hy.dt.Nh = sz/(int)sizeof(double);
 	hy.dt.head.SetCount(hy.dt.Nh);
 	if (GetDiffractionOutput(wave, dotHeadings, &sz, hy.dt.head.begin()))
 		throwError("Load dotHeadings 2");				
 	
 	hy.dt.Nb = GetInt(wave, L"NumberOfIncludedBodies");
 	
-	Buffer<TVector> origins(hy.dt.Nb);
+	Buffer<TVector> origins((size_t)hy.dt.Nb);
 	if (!IsNull(c0)) {
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 			origins[ib][0] = c0.x;
@@ -612,8 +612,8 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		if (GetDiffractionOutput(wave, type, &sz, NULL))
 			throwError("Load dotAddedMass_Radiation");	
 		
-		if (sz/sizeof(double) != (wrongsz = 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf))		
-			throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(double)), wrongsz));
+		if (sz/(int)sizeof(double) != (wrongsz = 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf))		
+			throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/(int)sizeof(double)), wrongsz));
 		
 		MultiDimMatrixRowMajor<double> a(hy.dt.Nf, 6*hy.dt.Nb, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
@@ -638,8 +638,8 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	if (GetDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, &sz, NULL))
 		throwError("Load dotInfiniteFrequencyAddedMass");	
 	
-	if (sz/sizeof(double) != (wrongsz = 6*hy.dt.Nb*6*hy.dt.Nb))
-		throw Exc(F("Wrong %s size (%d <> %d)", "infinite frequency added mass", int(sz/sizeof(double)), wrongsz));
+	if (sz/(int)sizeof(double) != (wrongsz = 6*hy.dt.Nb*6*hy.dt.Nb))
+		throw Exc(F("Wrong %s size (%d <> %d)", "infinite frequency added mass", int(sz/(int)sizeof(double)), wrongsz));
 	
 	MultiDimMatrixRowMajor<double> a(6*hy.dt.Nb, 6*hy.dt.Nb);
 	if (GetDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, &sz, a.begin()))
@@ -665,8 +665,8 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		if (sz == 0)
 			return false;
 		
-		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*hy.dt.Nh))
-			throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+		if (sz/(int)sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*hy.dt.Nh))
+			throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/(int)sizeof(TComplex)), wrongsz));
 		
 		hy.Initialize_Forces(f);
 		
@@ -699,7 +699,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	if (GetDiffractionOutput(wave, dotQTFAngularFrequencies, &sz, NULL))
 		throwError("Load dotAngularFrequencies");	
 
-	Buffer<double> qfreq(sz/sizeof(double));
+	Buffer<double> qfreq(sz/(int)sizeof(double));
 	if (GetDiffractionOutput(wave, dotQTFAngularFrequencies, &sz, qfreq))
 		throwError("Load dotQTFAngularFrequencies 2");	
 	
@@ -714,7 +714,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	if (GetDiffractionOutput(wave, dotMeanDriftHeadingPairs, &sz, NULL))
 		throwError("Load dotMeanDriftHeadingPairs");	
 	
-	Buffer<double> qmh(sz/sizeof(double));
+	Buffer<double> qmh(sz/(int)sizeof(double));
 	if (GetDiffractionOutput(wave, dotMeanDriftHeadingPairs, &sz, qmh.begin()))
 		throwError("Load dotMeanDriftHeadingPairs 2");	
 
@@ -730,8 +730,8 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		if (sz == 0)
 			return false;
 		
-		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*int(hy.dt.mdhead.size())))
-			throwError(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+		if (sz/(int)sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*int(hy.dt.mdhead.size())))
+			throwError(F("Wrong %s size (%d <> %d)", stype, int(sz/(int)sizeof(TComplex)), wrongsz));
 		
 		MultiDimMatrixRowMajor<TComplex> md((int)hy.dt.mdhead.size(), hy.dt.Nf, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, md.begin()))
@@ -768,7 +768,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	if (GetDiffractionOutput(wave, dotQTFHeadingPairs, &sz, NULL))
 		throwError("Load dotQTFHeadingPairs");	
 				
-	Buffer<double> qh(sz/sizeof(double));
+	Buffer<double> qh((size_t)sz/sizeof(double));
 	if (GetDiffractionOutput(wave, dotQTFHeadingPairs, &sz, qh.begin()))
 		throwError("Load dotQTFHeadingPairs 2");	
 	
@@ -788,8 +788,8 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 			if (sz == 0)
 				return false;
 			
-			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*int(hy.dt.qhead.size())))
-				throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+			if (sz/(int)sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*int(hy.dt.qhead.size())))
+				throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/(int)sizeof(TComplex)), wrongsz));
 			
 			qtf.Resize((int)hy.dt.qhead.size(), Nqw, 6*hy.dt.Nb);
 			if (GetDiffractionOutput(wave, type, &sz, qtf.begin()))
@@ -802,8 +802,8 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 			if (sz == 0)
 				return false;
 			
-			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*int(hy.dt.qhead.size())))
-				throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+			if (sz/(int)sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*int(hy.dt.qhead.size())))
+				throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/(int)sizeof(TComplex)), wrongsz));
 			
 			qtfDirect.Resize((int)hy.dt.qhead.size(), Nqw, 6*hy.dt.Nb);
 			if (GetDiffractionOutput(wave, dotDirectPotentialLoad, &sz, qtfDirect.begin()))
@@ -895,8 +895,8 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		throwError("Load dotPanelPressureRadiation");			
 	
 	if (sz > 0) {
-		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*Np))
-			throwError(F("Wrong %s size (%d <> %d)", "dotPanelPressureRadiation", int(sz/sizeof(TComplex)), wrongsz));
+		if (sz/(int)sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*Np))
+			throwError(F("Wrong %s size (%d <> %d)", "dotPanelPressureRadiation", int(sz/(int)sizeof(TComplex)), wrongsz));
 					
 		MultiDimMatrixRowMajor<TComplex> presRad(6*hy.dt.Nb, hy.dt.Nf, Np);
 		if (GetDiffractionOutput(wave, dotPanelPressureRadiation, &sz, presRad.begin()))
@@ -920,8 +920,8 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		throwError("Load dotPanelPressureDiffraction");	
 	
 	if (sz > 0) {
-		if (sz/sizeof(TComplex) != (wrongsz = hy.dt.Nh*hy.dt.Nf*Np))
-			throwError(F("Wrong %s size (%d <> %d)", "dotPanelPressureDiffraction", int(sz/sizeof(TComplex)), wrongsz));
+		if (sz/(int)sizeof(TComplex) != (wrongsz = hy.dt.Nh*hy.dt.Nf*Np))
+			throwError(F("Wrong %s size (%d <> %d)", "dotPanelPressureDiffraction", int(sz/(int)sizeof(TComplex)), wrongsz));
 			
 		MultiDimMatrixRowMajor<TComplex> pres(hy.dt.Nh, hy.dt.Nf, Np);
 		if (GetDiffractionOutput(wave, dotPanelPressureDiffraction, &sz, pres.begin()))
@@ -954,7 +954,7 @@ String Orca::GetErrorString() {
 	if (!GetLastErrorString)
 		return "";
 	int len = GetLastErrorString(NULL);
-	Buffer<wchar_t> rw(len);
+	Buffer<wchar_t> rw((size_t)len);
 	LPWSTR wcs = (LPWSTR)rw.begin();
 	GetLastErrorString(wcs);
 	return WideToString(wcs, len);

@@ -780,7 +780,7 @@ bool _BMR_Bem_w_Set(const double *w, int dim) noexcept {
 		Hydro &hy = Bem().hydros[BMR().bemid];
 		
 		hy.dt.w.SetCount(dim);
-		Copy(w, dim, hy.dt.w);
+		Copy(w, (size_t)dim, hy.dt.w);
 		hy.dt.Nf = dim;
 		
 		hy.SortFrequencies();
@@ -859,7 +859,7 @@ bool _BMR_Bem_headings_Set(const double *head, int dim) noexcept {
 		Hydro &hy = Bem().hydros[BMR().bemid];
 		
 		hy.dt.head.SetCount(dim);
-		Copy(head, dim, hy.dt.head);
+		Copy(head, (size_t)dim, hy.dt.head);
 		hy.dt.Nh = hy.dt.head.size();
 		
 		hy.SortHeadings(BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360);

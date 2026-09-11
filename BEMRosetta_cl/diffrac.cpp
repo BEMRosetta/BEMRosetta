@@ -53,7 +53,7 @@ static bool ReadVectorDouble(XmlNode &node, const String &tag, UVector<double> &
 	ret.Clear();
 	String str = Trim(child.GatherText());
 	UVector<String> t = Split(str, ',');
-	for (const String s : t) {
+	for (const String &s : t) {
 		int posleft = s.FindAfter("(");
 		if (posleft > 0) {
 			int posright = str.FindAfter(")", posleft);	
@@ -107,29 +107,29 @@ void DiffracData::LoadXML(const String &xml) {
 	XmlNode xn = ParseXML(xml);
 	XmlNode &sim = xn("sim");
 	
-	XmlNode &parVTKDIF = sim("parVTKDIF");
-	if (parVTKDIF.GetCount())
-		ReadBool(parVTKDIF, "runProgram", this->parVTKDIF.runProgram);
+	XmlNode &parVTKDIFx = sim("parVTKDIF");
+	if (parVTKDIFx.GetCount())
+		ReadBool(parVTKDIFx, "runProgram", this->parVTKDIF.runProgram);
 		
-	XmlNode &parINIDIF = sim("parINIDIF");
-	if (parINIDIF.GetCount()) {
-		ReadBool(parINIDIF, "runProgram", this->parINIDIF.runProgram);
-		ReadString(parINIDIF, "dataBaseFn", this->parINIDIF.dataBaseFn);
-		XmlNode &quay = parINIDIF("quay");
+	XmlNode &parINIDIFx = sim("parINIDIF");
+	if (parINIDIFx.GetCount()) {
+		ReadBool(parINIDIFx, "runProgram", this->parINIDIF.runProgram);
+		ReadString(parINIDIFx, "dataBaseFn", this->parINIDIF.dataBaseFn);
+		XmlNode &quay = parINIDIFx("quay");
 		if (quay.GetCount()) {
 			ReadBool(quay, "apply", this->parINIDIF.quay.apply);
 			ReadDouble(quay, "yQuay", this->parINIDIF.quay.yQuay);
 		}
-		XmlNode &basinWall = parINIDIF("basinWall");
+		XmlNode &basinWall = parINIDIFx("basinWall");
 		if (basinWall.GetCount()) {
 			ReadBool(basinWall,   "apply",  this->parINIDIF.basinWall.apply);
 			ReadPointf(basinWall, "origin", this->parINIDIF.basinWall.origin);
 		}
-		ReadDouble(parINIDIF, "density", this->parINIDIF.density);
-		XmlNode &springMatrix = parINIDIF("springMatrix");
+		ReadDouble(parINIDIFx, "density", this->parINIDIF.density);
+		XmlNode &springMatrix = parINIDIFx("springMatrix");
 		if (springMatrix.GetCount()) 
 			ReadBool(springMatrix, "fromGeometry", this->parINIDIF.springMatrixfromGeometry);
-		XmlNode &dampLids = parINIDIF("dampLids");
+		XmlNode &dampLids = parINIDIFx("dampLids");
 		for (int i = 0; i < dampLids.GetCount(); ++i) {
 			XmlNode &dampLid = dampLids.At(i);	
 			if (dampLid.GetCount()) {
@@ -145,26 +145,26 @@ void DiffracData::LoadXML(const String &xml) {
 			}
 		}
 	}
-	XmlNode &parDIFFRAC = sim("parDIFFRAC");
-	if (parDIFFRAC.GetCount()) {
+	XmlNode &parDIFFRACx = sim("parDIFFRAC");
+	if (parDIFFRACx.GetCount()) {
 		double minFrequency, frequencyStep;
 		int nFrequencies;
 				
-		ReadBool(parDIFFRAC, "runProgram", this->parDIFFRAC.runProgram);
-		ReadVectorDouble(parDIFFRAC, "waveDir", this->parDIFFRAC.waveDir);
-		ReadDouble(parDIFFRAC, "waterDepth", this->parDIFFRAC.waterDepth);
-		XmlNode &current = parDIFFRAC("current");
+		ReadBool(parDIFFRACx, "runProgram", this->parDIFFRAC.runProgram);
+		ReadVectorDouble(parDIFFRACx, "waveDir", this->parDIFFRAC.waveDir);
+		ReadDouble(parDIFFRACx, "waterDepth", this->parDIFFRAC.waterDepth);
+		XmlNode &current = parDIFFRACx("current");
 		if (current.GetCount()) {
 			ReadDouble(current, "speed", this->parDIFFRAC.current.speed);
 			ReadDouble(current, "direction", this->parDIFFRAC.current.direction);
 		}
-		ReadString(parDIFFRAC, "irregFreqSuppression", this->parDIFFRAC.irregFreqSuppression);
-		ReadDouble(parDIFFRAC, "irregFreqDamping", this->parDIFFRAC.irregFreqDamping);
-		ReadVectorDouble(parDIFFRAC, "waveFreq", this->parDIFFRAC.waveFreq);
-		ReadDouble(parDIFFRAC, "frequencyStep", frequencyStep);
-		ReadInt(parDIFFRAC, "nFrequencies", nFrequencies);
-		ReadDouble(parDIFFRAC, "minFrequency", minFrequency);
-		ReadBool(parDIFFRAC, "exportKinematicsVTK", this->parDIFFRAC.exportKinematicsVTK);
+		ReadString(parDIFFRACx, "irregFreqSuppression", this->parDIFFRAC.irregFreqSuppression);
+		ReadDouble(parDIFFRACx, "irregFreqDamping", this->parDIFFRAC.irregFreqDamping);
+		ReadVectorDouble(parDIFFRACx, "waveFreq", this->parDIFFRAC.waveFreq);
+		ReadDouble(parDIFFRACx, "frequencyStep", frequencyStep);
+		ReadInt(parDIFFRACx, "nFrequencies", nFrequencies);
+		ReadDouble(parDIFFRACx, "minFrequency", minFrequency);
+		ReadBool(parDIFFRACx, "exportKinematicsVTK", this->parDIFFRAC.exportKinematicsVTK);
 		
 		if (this->parDIFFRAC.waveFreq.IsEmpty()) {
 			this->parDIFFRAC.waveFreq.SetCount(nFrequencies);
@@ -172,10 +172,10 @@ void DiffracData::LoadXML(const String &xml) {
 				this->parDIFFRAC.waveFreq[i] = minFrequency + frequencyStep*i;
 		}
 	}
-	XmlNode &parDBRESP = sim("parDBRESP");
-	if (parDBRESP.GetCount()) {		
-		ReadBool(parDBRESP, "runProgram", this->parDBRESP.runProgram);
-		XmlNode &BodyInputs = parDBRESP("BodyInputs");
+	XmlNode &parDBRESPx = sim("parDBRESP");
+	if (parDBRESPx.GetCount()) {		
+		ReadBool(parDBRESPx, "runProgram", this->parDBRESP.runProgram);
+		XmlNode &BodyInputs = parDBRESPx("BodyInputs");
 		for (int i = 0; i < BodyInputs.GetCount(); ++i) {
 			XmlNode &BodyInput = BodyInputs.At(i);
 			if (BodyInput.GetCount()) {	
@@ -194,49 +194,49 @@ void DiffracData::LoadXML(const String &xml) {
 				}
 			}
 		}
-		XmlNode &springMatrix = parDBRESP("springMatrix");
+		XmlNode &springMatrix = parDBRESPx("springMatrix");
 		if (springMatrix.GetCount()) {	
 			ReadString(springMatrix, "fileName", this->parDBRESP.springMatrix.fileName);	
 			ReadBool(springMatrix, "isEarthFixed", this->parDBRESP.springMatrix.isEarthFixed);	
 			ReadString(springMatrix, "unit", this->parDBRESP.springMatrix.unit);	
 		}
-		XmlNode &dampingMatrix = parDBRESP("dampingMatrix");
+		XmlNode &dampingMatrix = parDBRESPx("dampingMatrix");
 		if (springMatrix.GetCount()) {	
 			ReadString(dampingMatrix, "fileName", this->parDBRESP.dampingMatrix.fileName);	
 			ReadBool(dampingMatrix, "isEarthFixed", this->parDBRESP.dampingMatrix.isEarthFixed);	
 			ReadString(dampingMatrix, "unit", this->parDBRESP.dampingMatrix.unit);	
 		}
 	}
-	XmlNode &parDRIFTP = sim("parDRIFTP");
-	if (parDRIFTP.GetCount()) {		
-		ReadBool(parDRIFTP, "runProgram", this->parDRIFTP.runProgram);	
-		ReadBool(parDRIFTP, "exportContribution1", this->parDRIFTP.exportContribution[0]);
-		ReadBool(parDRIFTP, "exportContribution2", this->parDRIFTP.exportContribution[1]);
-		ReadBool(parDRIFTP, "exportContribution3", this->parDRIFTP.exportContribution[2]);
-		ReadBool(parDRIFTP, "exportContribution4", this->parDRIFTP.exportContribution[3]);
-		ReadBool(parDRIFTP, "exportContribution5", this->parDRIFTP.exportContribution[4]);
-		ReadDouble(parDRIFTP, "minFrequency", this->parDRIFTP.minFrequency);	
-		ReadDouble(parDRIFTP, "maxFrequency", this->parDRIFTP.maxFrequency);
-		ReadInt(parDRIFTP, "numberOfWavefrequencyDiagonals", this->parDRIFTP.numberOfWavefrequencyDiagonals);
-		ReadBool(parDRIFTP, "waveDirInteraction", this->parDRIFTP.waveDirInteraction);	
+	XmlNode &parDRIFTPx = sim("parDRIFTP");
+	if (parDRIFTPx.GetCount()) {		
+		ReadBool(parDRIFTPx, "runProgram", this->parDRIFTP.runProgram);	
+		ReadBool(parDRIFTPx, "exportContribution1", this->parDRIFTP.exportContribution[0]);
+		ReadBool(parDRIFTPx, "exportContribution2", this->parDRIFTP.exportContribution[1]);
+		ReadBool(parDRIFTPx, "exportContribution3", this->parDRIFTP.exportContribution[2]);
+		ReadBool(parDRIFTPx, "exportContribution4", this->parDRIFTP.exportContribution[3]);
+		ReadBool(parDRIFTPx, "exportContribution5", this->parDRIFTP.exportContribution[4]);
+		ReadDouble(parDRIFTPx, "minFrequency", this->parDRIFTP.minFrequency);	
+		ReadDouble(parDRIFTPx, "maxFrequency", this->parDRIFTP.maxFrequency);
+		ReadInt(parDRIFTPx, "numberOfWavefrequencyDiagonals", this->parDRIFTP.numberOfWavefrequencyDiagonals);
+		ReadBool(parDRIFTPx, "waveDirInteraction", this->parDRIFTP.waveDirInteraction);	
 	}
-	XmlNode &parSUMFREQUENCYWAVEFORCES = sim("parSUMFREQUENCYWAVEFORCES");
-	if (parSUMFREQUENCYWAVEFORCES.GetCount()) {		
-		ReadBool(parSUMFREQUENCYWAVEFORCES, "runProgram", this->parSUMFREQUENCYWAVEFORCES.runProgram);	
-		ReadBool(parSUMFREQUENCYWAVEFORCES, "exportContribution1", this->parSUMFREQUENCYWAVEFORCES.exportContribution[0]);
-		ReadBool(parSUMFREQUENCYWAVEFORCES, "exportContribution2", this->parSUMFREQUENCYWAVEFORCES.exportContribution[1]);
-		ReadBool(parSUMFREQUENCYWAVEFORCES, "exportContribution3", this->parSUMFREQUENCYWAVEFORCES.exportContribution[2]);
-		ReadBool(parSUMFREQUENCYWAVEFORCES, "exportContribution4", this->parSUMFREQUENCYWAVEFORCES.exportContribution[3]);
-		ReadBool(parSUMFREQUENCYWAVEFORCES, "exportContribution5", this->parSUMFREQUENCYWAVEFORCES.exportContribution[4]);
-		ReadDouble(parSUMFREQUENCYWAVEFORCES, "minFrequency", this->parSUMFREQUENCYWAVEFORCES.minFrequency);	
-		ReadDouble(parSUMFREQUENCYWAVEFORCES, "maxFrequency", this->parSUMFREQUENCYWAVEFORCES.maxFrequency);
-		ReadInt(parSUMFREQUENCYWAVEFORCES, "numberOfWavefrequencyDiagonals", this->parSUMFREQUENCYWAVEFORCES.numberOfWavefrequencyDiagonals);
-		ReadBool(parSUMFREQUENCYWAVEFORCES, "waveDirInteraction", this->parSUMFREQUENCYWAVEFORCES.waveDirInteraction);	
+	XmlNode &parSUMFREQUENCYWAVEFORCESx = sim("parSUMFREQUENCYWAVEFORCES");
+	if (parSUMFREQUENCYWAVEFORCESx.GetCount()) {		
+		ReadBool(parSUMFREQUENCYWAVEFORCESx, "runProgram", this->parSUMFREQUENCYWAVEFORCES.runProgram);	
+		ReadBool(parSUMFREQUENCYWAVEFORCESx, "exportContribution1", this->parSUMFREQUENCYWAVEFORCES.exportContribution[0]);
+		ReadBool(parSUMFREQUENCYWAVEFORCESx, "exportContribution2", this->parSUMFREQUENCYWAVEFORCES.exportContribution[1]);
+		ReadBool(parSUMFREQUENCYWAVEFORCESx, "exportContribution3", this->parSUMFREQUENCYWAVEFORCES.exportContribution[2]);
+		ReadBool(parSUMFREQUENCYWAVEFORCESx, "exportContribution4", this->parSUMFREQUENCYWAVEFORCES.exportContribution[3]);
+		ReadBool(parSUMFREQUENCYWAVEFORCESx, "exportContribution5", this->parSUMFREQUENCYWAVEFORCES.exportContribution[4]);
+		ReadDouble(parSUMFREQUENCYWAVEFORCESx, "minFrequency", this->parSUMFREQUENCYWAVEFORCES.minFrequency);	
+		ReadDouble(parSUMFREQUENCYWAVEFORCESx, "maxFrequency", this->parSUMFREQUENCYWAVEFORCES.maxFrequency);
+		ReadInt(parSUMFREQUENCYWAVEFORCESx, "numberOfWavefrequencyDiagonals", this->parSUMFREQUENCYWAVEFORCES.numberOfWavefrequencyDiagonals);
+		ReadBool(parSUMFREQUENCYWAVEFORCESx, "waveDirInteraction", this->parSUMFREQUENCYWAVEFORCES.waveDirInteraction);	
 	}
-	XmlNode &parEXPORT = sim("parEXPORT");
-	if (parEXPORT.GetCount()) {		
-		ReadBool(parEXPORT, "runProgram", this->parEXPORT.runProgram);		
-		XmlNode &hydFile = parEXPORT("hydFile");
+	XmlNode &parEXPORTx = sim("parEXPORT");
+	if (parEXPORTx.GetCount()) {		
+		ReadBool(parEXPORTx, "runProgram", this->parEXPORT.runProgram);		
+		XmlNode &hydFile = parEXPORTx("hydFile");
 		if (hydFile.GetCount()) {	
 			ReadBool(hydFile, "export", this->parEXPORT.hyd.exportOn);	
 			ReadBool(hydFile, "exportQTFContribution1", this->parEXPORT.hyd.exportQTF[0]);
@@ -246,7 +246,7 @@ void DiffracData::LoadXML(const String &xml) {
 			ReadBool(hydFile, "exportQTFContribution5", this->parEXPORT.hyd.exportQTF[4]);
 			ReadInt(hydFile, "numberOfWavefrequencyDiagonals", this->parEXPORT.hyd.numberOfWavefrequencyDiagonals);
 		}
-		XmlNode &MonitorRelativeWaveHeights = parEXPORT("MonitorRelativeWaveHeights");
+		XmlNode &MonitorRelativeWaveHeights = parEXPORTx("MonitorRelativeWaveHeights");
 		for (int i = 0; i < MonitorRelativeWaveHeights.GetCount(); ++i) {
 			XmlNode &MonitorRelativeWaveHeight = MonitorRelativeWaveHeights.At(i);
 			if (MonitorRelativeWaveHeight.GetCount()) {	
@@ -265,7 +265,7 @@ void DiffracData::LoadXML(const String &xml) {
 				 }
 			}
 		}
-		XmlNode &CGNS = parEXPORT("CGNS");
+		XmlNode &CGNS = parEXPORTx("CGNS");
 		if (CGNS.GetCount()) {
 			ReadBool(CGNS, "export", this->parEXPORT.cgns.exportOn);
 			ReadDouble(CGNS, "waveFreq", this->parEXPORT.cgns.waveFreq);
@@ -275,8 +275,8 @@ void DiffracData::LoadXML(const String &xml) {
 				if (MonitorFlowData.GetCount()) {
 					DiffracData::ParEXPORT::CGNS::MonitorFlowData &data = this->parEXPORT.cgns.monitorFlowData.Add();
 					XmlNode &grids = MonitorFlowData("grids");
-					for (int i = 0; i < grids.GetCount(); ++i) {
-						XmlNode &grid = grids.At(i);
+					for (int j = 0; j < grids.GetCount(); ++j) {
+						XmlNode &grid = grids.At(j);
 						if (grid.GetCount()) {
 							DiffracData::ParEXPORT::CGNS::MonitorFlowData::Grid &gr = data.grids.Add();	
 							ReadInt(grid, "NrOfPointsX", gr.Nx);
@@ -298,9 +298,9 @@ void DiffracData::LoadXML(const String &xml) {
 			ReadDouble(CGNS, "waveDir", this->parEXPORT.cgns.waveDir);
 		}
 	}
-	XmlNode &bodies = sim("bodies");
-	for (int i = 0; i < bodies.GetCount(); ++i) {
-		XmlNode &body = bodies.At(i);	
+	XmlNode &bodiesx = sim("bodies");
+	for (int i = 0; i < bodiesx.GetCount(); ++i) {
+		XmlNode &body = bodiesx.At(i);	
 		if (body.GetCount()) {
 			DiffracData::Body &b = this->bodies.Add();
 			XmlNode &hstat = body("hstat");
@@ -677,7 +677,7 @@ String Diffrac::LoadCase(String file) {
 		
 	    String xml = LoadFile(file);
 	    if(IsNull(xml))
-	        return F(t_("Cannot read file %s"), file);
+			return F(t_("Cannot read file %s"), file);
 
 		DiffracData data;
 		data.LoadXML(xml);
