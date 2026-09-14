@@ -594,8 +594,7 @@ void Hams::Save_Settings(String folderInput) const {
 		throw Exc(F(t_("Impossible to create '%s'"), fileName));
 	
 	Body mesh;
-	double dummyg;
-	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dummyg, Null, Null, false);
+	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	

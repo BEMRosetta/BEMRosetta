@@ -2146,7 +2146,6 @@ void MapMeshes::Init(int _idx, int _ib, double _tolerance) {
 }
 
 void MapMeshes::OnMapMeshes() {
-	int rad, diff, inc;
 	try {
 		UVector<int> idmeshes;
 		for (int row = 0; row < listLoaded.GetCount(); ++row) {
@@ -2160,7 +2159,7 @@ void MapMeshes::OnMapMeshes() {
 		WaitCursor wait;
 		
 		int idFrom = Bem().hydros.size();
-		Bem().MapMeshes(idx, ib, idmeshes, int(~opOneMany) == 0, true, tolerance, rad, diff, inc);
+		Bem().MapMeshes(idx, ib, idmeshes, int(~opOneMany) == 0, true, tolerance, true, true, true);
 		
 		for (int i = idFrom; i < Bem().hydros.size(); ++i) {
 			const Hydro &hy = Bem().hydros[i];

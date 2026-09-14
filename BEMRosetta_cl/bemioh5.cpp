@@ -579,4 +579,23 @@ void BemioH5::Save(String file) const {
 			hfile.UpGroup();
 		}
 	}
+	if (IsLoadedStateSpace()) {
+		if (hfile.CreateGroup("foamm", true)) {
+			for (int r = 0; r < dt.sts.size(); ++r) {
+				for (int c = 0; c < dt.sts[r].size(); ++c) {	
+					if (dt.sts[r][c].A_ss.size() > 0) {
+						if (hfile.CreateGroup(F("%d:%d", r+1, c+1), true)) {
+							hfile.Set("A", dt.sts[r][c].A_ss).SetDescription("A_ss");
+							hfile.Set("B", dt.sts[r][c].B_ss).SetDescription("B_ss");
+							hfile.Set("C", dt.sts[r][c].C_ss).SetDescription("C_ss");
+							hfile.Set("FreqRange", dt.sts[r][c].ssFreqRange).SetDescription("Ranhe of frequencies").SetUnits("rad/s");
+							hfile.Set("Frequencies", dt.sts[r][c].ssFrequencies).SetDescription("Frequencies chosen").SetUnits("rad/s");
+						}
+						hfile.UpGroup();
+					}
+				}
+			}
+			hfile.UpGroup();
+		}
+	}
 }

@@ -137,8 +137,8 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 void Foamm::Get(const UVector<int> &ib0s, const UVector<int> &idfs, const UVector<int> &ib1s, const UVector<int> &jdfs,
 		const UVector<double> &froms, const UVector<double> &tos, const UVector<UVector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
-	if (!FileExists(Bem().foammPath))
-		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
+/**/if (!FileExists(Bem().foammPath))
+/**/	throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
 	for (int i = 0; i < ib0s.size(); ++i) {
 		Status(F(t_("Processing case %d"), i+1), int((100*i)/ib0s.size()));
 		Get_Each(ib0s[i], idfs[i], ib1s[i], jdfs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);
@@ -153,11 +153,9 @@ void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double t
 		throw Exc(F(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
 	String file = AFX(folder, "temp_file.mat");
 
-//file = AFX(GetDesktopFolder(), "temp_file2.mat");
-
 	int idf = ib0*6 + _idf;
 	int jdf = ib1*6 + _jdf;
-
+/**/
 	MatFile mat;
 	
 	if (!mat.OpenCreate(file, MAT_FT_MAT5)) 
@@ -179,16 +177,6 @@ void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double t
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
 		matw(0, ifr) = dt.w[ifr];
 	mat.Write("w", matw);
-	
-//	MatMatrix<double> matDof(1, 6);
-//	for (int i = 0; i < 6; ++i) {
-//		if (i == idf)
-//			matDof(0, i) = 1;
-//		else
-//			matDof(0, i) = 0;
-//	}
-//	if (!mat.VarWrite("Dof", matDof))
-// 		throw Exc(F(t_("Problem writing %s to file '%s'"), "Dof", file));
 	
 	MatFile::StructNode options(mat, "Options", {"Mode", "Method", "FreqRangeChoice", "FreqChoice", "Optim"});
 	
@@ -248,7 +236,9 @@ void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double t
 		DeleteFolderDeep(folder);	Sleep(100);
 		throw Exc(t_("FOAMM ended with error"));
 	}
-
+/*
+file = AFX(GetDesktopFolder(), "temp_file2.mat");
+*/
 	Load_mat(file, idf, jdf, false);	Sleep(100);
 	DeleteFolderDeep(folder);			Sleep(100);
 }

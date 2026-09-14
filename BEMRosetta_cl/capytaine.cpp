@@ -184,7 +184,7 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 			else
 				throw Exc(F("Data is not text. Found %s", NetCDFFile::TypeName(type)));
 		} else if (cdf.ExistVar("body")) {		// From v3
-			cdf.GetVariableData("body", type, dims, false);
+			cdf.GetVariableData("body", type, dims);//, false);
 			if (type == NC_CHAR) {
 				if (dims.size() == 1) {
 					String bodies = cdf.GetString("body");

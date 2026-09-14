@@ -8,7 +8,8 @@ uses
 	DropGrid,
 	Controls4U,
 	ScatterCtrl,
-	SurfaceCanvas;
+	SurfaceCanvas,
+	Hdf5;
 
 options(CLANG & PEDANTIC) "-Wall -Wextra -Wunused-parameter -Wlogical-op-parentheses -Wdeprecated-copy-with-user-provided-copy -Woverloaded-virtual -Wmissing-braces -Wshadow -Wimplicit-fallthrough -Wsign-conversion -Wformat=2";
 

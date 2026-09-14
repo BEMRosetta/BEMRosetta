@@ -835,7 +835,7 @@ bool _BMR_Bem_w_Get(double **data, int dim[1]) noexcept {
 }
 
 int _BMR_Bem_w_size() noexcept {
-	double ret;
+	int ret;
 	try {
 		if (Bem().hydros.IsEmpty()) 
 			throw Exc(t_("No bem case is loaded"));
@@ -908,7 +908,7 @@ bool _BMR_Bem_headings_Get(double **data, int dim[1]) noexcept {
 }
 
 int _BMR_Bem_headings_size() noexcept {
-	double ret;
+	int ret;
 	try {
 		if (Bem().hydros.IsEmpty()) 
 			throw Exc(t_("No bem case is loaded"));

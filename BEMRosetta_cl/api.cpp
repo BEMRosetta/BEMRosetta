@@ -3,6 +3,7 @@
 // Copyright 2020 - 2026, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 
+/*
 String CleanCFromDeclaration(const String &include, bool removeSemicolon) {
 	String str = include;
 	
@@ -22,7 +23,7 @@ String CleanCFromDeclaration(const String &include, bool removeSemicolon) {
 		str.Replace(");", ")");
 	
 	return str;
-}
+}*/
 
 static void ListArgsCFunction(const String &strargs, const UVector <String> &ctypes, 
 						UVector<int> &argTypeId, UVector<String> &argVars) {

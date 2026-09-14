@@ -12,7 +12,7 @@
 
 
 String GetPythonDeclaration(const String &name, const String &prefix, const String &include);
-String CleanCFromDeclaration(const String &include, bool removeSemicolon);
+//String CleanCFromDeclaration(const String &include, bool removeSemicolon);
 String BMR_strCDeclaration(const String &include);
 String BMR_strCppDeclaration(const String &include);
 String BMR_CFunctions_List(const String &include, bool isC);

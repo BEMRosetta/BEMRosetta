@@ -15,7 +15,9 @@
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
-
+#if defined(PLATFORM_WIN32) 
+#include <Hdf5/hdf5.h>
+#endif
 
 using namespace Upp;
 
@@ -595,11 +597,9 @@ GUI_APP_MAIN {
 	fnt.Height(height);
 	SetStdFont(fnt); 
 	
-	
 	#if defined(PLATFORM_WIN32) 
-	//#ifdef flagDEBUG
+	Hdf5File::Init();				// To avoid problems between HDF5 and CrashHandler with MSVC
 	GetCrashHandler().Enable();
-	//#endif
 	#ifndef flagDEBUG
 	if (EM().Init("BEMRosetta", "BEMRosetta", EM().DefaultExitError, Null))
 		return;
