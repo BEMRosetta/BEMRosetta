@@ -35,7 +35,7 @@ del .\.test\libbemrosetta.def
 @echo Compiling BEMRosetta_cl TEST_DLL %1
 umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_TEST_DLL -r	.\.test\testdll_bemrosetta.exe
 @IF %ERRORLEVEL% NEQ 0 PAUSE "Error compiling BEMRosetta"
-.\.test\testdll_bemrosetta.exe  .
+.\.test\testdll_bemrosetta.exe  ..
 @IF %ERRORLEVEL% NEQ 0 PAUSE "Error testing BEMRosetta"
 del /Q /F .\.test\testdll_bemrosetta.exe
 

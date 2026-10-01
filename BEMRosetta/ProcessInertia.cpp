@@ -186,31 +186,32 @@ void MenuProcessInertia::Action() {
 			opInertia.EnableCase(0);
 	
 		bool isvol;
-		if (opInertia == 0) {
+		if (opInertia == 0 && opmass != 0) {
 			EmptyGrid();
 			return;	
 		}
 		
-		if (opInertia == 1) {
-			isvol = true;
-			Point3D ccg = mesh.dt.mesh.GetCentreOfBuoyancy();
-			cg.x = ccg.x;	cg.y = ccg.y;
-			if (IsNull(cg.z)) {
-				cg.z = ccg.z;
-				z_g <<= cg.z;
+		if (opInertia == 1 || opInertia == 2) {
+			if (opInertia == 1) {
+				isvol = true;
+				Point3D ccg = mesh.dt.mesh.GetCentreOfBuoyancy();
+				cg.x = ccg.x;	cg.y = ccg.y;
+				if (IsNull(cg.z)) {
+					cg.z = ccg.z;
+					z_g <<= cg.z;
+				}
+			} else if (opInertia == 2) {
+				isvol = false;
+				Point3D ccg = mesh.dt.mesh.GetCentreOfGravity_Surface();
+				cg.x = ccg.x;	cg.y = ccg.y;
+				if (IsNull(cg.z)) {
+					cg.z = ccg.z;
+					z_g <<= cg.z;
+				}
 			}
-		} else {
-			isvol = false;
-			Point3D ccg = mesh.dt.mesh.GetCentreOfGravity_Surface();
-			cg.x = ccg.x;	cg.y = ccg.y;
-			if (IsNull(cg.z)) {
-				cg.z = ccg.z;
-				z_g <<= cg.z;
-			}
+			x_g <<= cg.x;
+			y_g <<= cg.y;
 		}
-		x_g <<= cg.x;
-		y_g <<= cg.y;
-
 		
 		if (isvol && mesh.dt.mesh.VolumeMatch(Bem().volError, Bem().volError) < 0) {
 			opInertia = 0;
@@ -275,31 +276,33 @@ void MenuProcessInertia::Action() {
 			
 			inertia3 = ia*ma + ib*mb;
 		}
-		Surface::GetInertia66(inertia6, inertia3, cg, c0, true);
 		
-		if (opmass == 3)
-			inertia6 *= mesh.dt.mesh.volume;
-		else if (opmass < 3) {
-			double m;
-			if (!IsNull(mass) && (opmass == 0 || opmass == 1))
-				m = mass;
-			else {
-				if (!IsNull(density))
-					m = density*mesh.dt.mesh.volume; 
+		if (opmass > 0) {
+			Surface::GetInertia66(inertia6, inertia3, cg, c0, true);
+			if (opmass == 3)
+				inertia6 *= mesh.dt.mesh.volume;
+			else if (opmass < 3) {
+				double m;
+				if (!IsNull(mass) && (opmass == 0 || opmass == 1))
+					m = mass;
+				else {
+					if (!IsNull(density))
+						m = density*mesh.dt.mesh.volume; 
+				}
+				inertia6 *= m;
 			}
-			inertia6 *= m;
-		}
-		grid.Clear();
-		if (opmass <= 3) {
-			for (int r = 0; r < 6; ++r)		
-				for (int c = 0; c < 6; ++c)
-					grid.Set(r, c, inertia6(r, c));
-		} else {
-			for (int r = 0; r < 3; ++r)	{	
-				for (int c = 0; c < 3; ++c) {
-					double val = inertia3(r, c);
-					int sign = Sign(val);
-					grid.Set(r, c+3, sign*sqrt(abs(val)));
+			grid.Clear();
+			if (opmass <= 3) {
+				for (int r = 0; r < 6; ++r)		
+					for (int c = 0; c < 6; ++c)
+						grid.Set(r, c, inertia6(r, c));
+			} else {
+				for (int r = 0; r < 3; ++r)	{	
+					for (int c = 0; c < 3; ++c) {
+						double val = inertia3(r, c);
+						int sign = Sign(val);
+						grid.Set(r, c+3, sign*sqrt(abs(val)));
+					}
 				}
 			}
 		}

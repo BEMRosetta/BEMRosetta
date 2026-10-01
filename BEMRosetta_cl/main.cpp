@@ -11,10 +11,16 @@
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)	
 
 
+String GetTppHeader(String topic) {
+	return F("topic \"%s\";\n"
+			 "[ $$0,0#00000000000000000000000000000000:Default]\n"
+			 "[{_}%%EN-US\n", topic);
+}
+
 String GetPythonDeclaration(const String &name, const String &prefix, const String &include);
 //String CleanCFromDeclaration(const String &include, bool removeSemicolon);
 String BMR_strCDeclaration(const String &include);
-String BMR_strCppDeclaration(const String &include);
+String BMR_strCppDeclaration(const String &include, String &help);
 String BMR_CFunctions_List(const String &include, bool isC);
 	
 String BMR_strPythonDeclaration(String export_h) {
@@ -42,9 +48,9 @@ CONSOLE_APP_MAIN
 		if (command.GetCount() < 1) 
 			throw Exc("Please include in command line binary and BEMRosetta folders");
 		
-		String unittestFolder = command[0];
+		String bemFolder = command[0];
+		String unittestFolder = AFX(bemFolder, "unittest");
 		String binFolder = AFX(unittestFolder, ".\\.test");
-		String bemFolder = AFX(unittestFolder, "..");
 		String installFolder = AFX(bemFolder, "install");
 		String export_h = AFX(bemFolder, "BEMRosetta_cl", "libbemrosetta.h"); 
 #endif
@@ -116,7 +122,9 @@ CONSOLE_APP_MAIN
 		//Cout() << strC;
 		
 		Cout() << "\nC++ declarations:\n";
-		String strCpp = BMR_strCppDeclaration(LoadFile(export_h));
+		String cppHelp = GetTppHeader("C++ API");
+		cppHelp << "[A4* C`+`+ API&&]\n";
+		String strCpp = BMR_strCppDeclaration(LoadFile(export_h), cppHelp);
 		//Cout() << strCpp;
 		
 		Cout() << "\nPython declarations:\n";
@@ -130,6 +138,10 @@ CONSOLE_APP_MAIN
 			throw Exc(t_("Impossible to save C declarations file"));		
 		if (!SaveFile(AFX(binFolder, "libbemrosetta.hpp"), strCpp))
 			throw Exc(t_("Impossible to save C++ declarations file"));
+		
+ 		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Cpp_en-us.tpp"), cppHelp))
+			throw Exc(t_("Impossible to save C++ help"));		
+ 		
 #endif
 
 #if defined(COMPILER_MSC) && defined(flagBEMR_TEST_DLL)
@@ -154,7 +166,7 @@ CONSOLE_APP_MAIN
 
 		{
 			printf("\nGenerating new case");
-			const char *meshFile = "../examples/capytaine/Orca/Body_1.gdf";	
+			const char *meshFile = "../../examples/capytaine/Orca/Body_1.gdf";	
 			
 			_BMR_Bem_New();
 			_BMR_Bem_depth_Set(50);

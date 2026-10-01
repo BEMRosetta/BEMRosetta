@@ -382,7 +382,7 @@ String GetArgNames(const UVector<String> &args) {
 }
 
 
-static String EmitNode(const String& name, const FuncNode& node, int depth, const String& parentClass, String &help) {
+static String EmitNode(const String& name, const FuncNode& node, int depth, const String& parentClass) {
     String ind(' ', depth*4);
     String s;
 
@@ -394,11 +394,11 @@ static String EmitNode(const String& name, const FuncNode& node, int depth, cons
         s << ind << "typedef " << retType << " (*" << name << "_t)(" << GetArgs(node.args) << ");\n";
         s << ind << "#ifdef BEMROSETTA_DYNAMIC\n";
         s << ind << name << "_t _" << name << " = nullptr;\n";
+        //s << ind << "#else\n";
+        //s << ind << name << "_t _" << name << " = &::" << node.fullName << ";\n";
         s << ind << "#endif\n";
         s << ind << "public:\n";
         s << ind << retType << name << "(" << GetArgs(node.args) << ") {\n";
-        help << F("[A3*;l%d; ", (depth-2)*100) << name << "(" << DeQtf(GetArgs(node.args)) << ")" << "&]\n";
-        help << F("[A3;l%d; ",  (depth-2)*100) << node.help << "&&]\n";
         s << ind << "#ifdef BEMROSETTA_DYNAMIC\n";
 	        s << ind << "    ";
 	        if (node.retType != "void")
@@ -418,7 +418,6 @@ static String EmitNode(const String& name, const FuncNode& node, int depth, cons
     } else {
         String className = name + "_t";
         s << ind << "class " << className << " {\n";
-        help << F("[A3*;l%d; ", (depth-2)*100) << name << "&]\n";
         String fri;
         if (parentClass == "BMR")
             fri = "BEMRosetta";
@@ -427,7 +426,7 @@ static String EmitNode(const String& name, const FuncNode& node, int depth, cons
         s << ind << "    friend class " << fri << ";\n";
         s << ind << "public:\n";
         for (int i = 0; i < node.children.size(); i++)
-            s << EmitNode(node.children.GetKey(i), node.children[i], depth + 1, className, help);
+            s << EmitNode(node.children.GetKey(i), node.children[i], depth + 1, className);
         s << ind << "#ifdef BEMROSETTA_DYNAMIC\n";
         s << ind << "private:\n";
         s << ind << "    void LoadDllFunction(DLL_HANDLE dll) {\n";
@@ -466,10 +465,10 @@ static FuncNode BuildTree(const UVector<String>& retTypes, const UVector<String>
     return root;
 }
 
-static String EmitClassBody(const FuncNode& node, int depth, const String& className, String &help) {
+static String EmitClassBody(const FuncNode& node, int depth, const String& className) {
     String s;
     for (int i = 0; i < node.children.size(); i++)
-        s << EmitNode(node.children.GetKey(i), node.children[i], depth + 1, className, help);
+        s << EmitNode(node.children.GetKey(i), node.children[i], depth + 1, className);
     return s;
 }
 
@@ -495,7 +494,7 @@ static String GenerateHeaderCpp(FuncNode& root, String &help) {
 
     s << "class " << "BEMRosetta" << " {\n"
       << "public:\n"
-      << EmitClassBody(top, 1, className, help);
+      << EmitClassBody(top, 1, className);
 
     s << "#ifdef BEMROSETTA_DYNAMIC\n"
       << "    DLL_HANDLE dll = nullptr;\n\n"
@@ -504,10 +503,12 @@ static String GenerateHeaderCpp(FuncNode& root, String &help) {
       << "        if (!dll)\n"
       << "            throw std::runtime_error(\"DLL '\" + std::string(file_dll) + \"' not found\");\n"
       << "        LoadDllFunction(dll);\n";
-    for (int i = 0; i < top.children.size(); i++)
-        if (!top.children[i].children.IsEmpty())
+    for (int i = 0; i < top.children.size(); i++) {
+        if (!top.children[i].children.IsEmpty()) {
         	s << "        " << top.children.GetKey(i) << ".LoadDllFunction(dll);\n";
-    
+        	help << top.children.GetKey(i) << ": " << top.children[i].help << "\n";
+        }
+    }
     s << "    }\n\n"
       << "    BEMRosetta(const char* file_dll) {LoadDll(file_dll);	Init();}\n"
       << "    ~BEMRosetta() {if(dll) DLL_FREE(dll);}\n";
@@ -581,7 +582,7 @@ void GetFunctionsList(const String &include, bool isC, UVector<String> &retTypes
 		if (status == 1) {
 			if (line.StartsWith("//")) {
 				line.Replace("//", "");
-				if (shelp.IsEmpty())
+				if (!shelp.IsEmpty())
 					shelp << "\n";
 				shelp << Trim(line);
 			} else if (line.StartsWith("L_EXPORT")) {
