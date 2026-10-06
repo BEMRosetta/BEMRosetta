@@ -28,6 +28,7 @@ file
 	BEMRosetta.h,
 	BEMRosetta_int.h,
 	API readonly separator,
+	simplecppqtf.cpp,
 	api.cpp,
 	dllapi.cpp,
 	libbemrosetta.h,

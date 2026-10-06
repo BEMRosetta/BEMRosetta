@@ -25,6 +25,7 @@ String CleanCFromDeclaration(const String &include, bool removeSemicolon) {
 	return str;
 }*/
 
+	
 static void ListArgsCFunction(const String &strargs, const UVector <String> &ctypes, 
 						UVector<int> &argTypeId, UVector<String> &argVars) {
 	UVector<String> args = Split(strargs, ",");
@@ -382,7 +383,7 @@ String GetArgNames(const UVector<String> &args) {
 }
 
 
-static String EmitNode(const String& name, const FuncNode& node, int depth, const String& parentClass, String &help) {
+static String EmitNode(const String& name, const FuncNode& node, int depth, const String& parentClass, String fullParentClass, String &help) {
     String ind(' ', depth*4);
     String s;
 
@@ -397,8 +398,8 @@ static String EmitNode(const String& name, const FuncNode& node, int depth, cons
         s << ind << "#endif\n";
         s << ind << "public:\n";
         s << ind << retType << name << "(" << GetArgs(node.args) << ") {\n";
-        help << F("[A3*;l%d; ", (depth-2)*100) << name << "(" << DeQtf(GetArgs(node.args)) << ")" << "&]\n";
-        help << F("[A3;l%d; ",  (depth-2)*100) << node.help << "&&]\n";
+        help << F("[A3*;l%d; ", (depth-2)*150) << ("[A1*@(150.150.150) " << fullParentClass << ".]") << name << "(" << DeQtf(GetArgs(node.args)) << ")" << "&]\n";
+        help << F("[A3;l%d; ",  (depth-2)*150) << node.help << "&&]\n";
         s << ind << "#ifdef BEMROSETTA_DYNAMIC\n";
 	        s << ind << "    ";
 	        if (node.retType != "void")
@@ -418,7 +419,7 @@ static String EmitNode(const String& name, const FuncNode& node, int depth, cons
     } else {
         String className = name + "_t";
         s << ind << "class " << className << " {\n";
-        help << F("[A3*;l%d; ", (depth-2)*100) << name << "&]\n";
+        help << F("[A3*;l%d; ", (depth-2)*150) << ("[A1*@(150.150.150) " << fullParentClass << ".]") << name << "&]\n";
         String fri;
         if (parentClass == "BMR")
             fri = "BEMRosetta";
@@ -427,7 +428,7 @@ static String EmitNode(const String& name, const FuncNode& node, int depth, cons
         s << ind << "    friend class " << fri << ";\n";
         s << ind << "public:\n";
         for (int i = 0; i < node.children.size(); i++)
-            s << EmitNode(node.children.GetKey(i), node.children[i], depth + 1, className, help);
+            s << EmitNode(node.children.GetKey(i), node.children[i], depth + 1, className, fullParentClass + "." + name, help);
         s << ind << "#ifdef BEMROSETTA_DYNAMIC\n";
         s << ind << "private:\n";
         s << ind << "    void LoadDllFunction(DLL_HANDLE dll) {\n";
@@ -469,7 +470,7 @@ static FuncNode BuildTree(const UVector<String>& retTypes, const UVector<String>
 static String EmitClassBody(const FuncNode& node, int depth, const String& className, String &help) {
     String s;
     for (int i = 0; i < node.children.size(); i++)
-        s << EmitNode(node.children.GetKey(i), node.children[i], depth + 1, className, help);
+        s << EmitNode(node.children.GetKey(i), node.children[i], depth + 1, className, "", help);
     return s;
 }
 

@@ -9,4 +9,6 @@ Coeff]&]
 [s0; &]
 [s0; &]
 [s0;#b17;a17; [*+186 API Help]&]
-[s0;#i150;b17;a17;O0; [^topic`:`/`/BEMRosetta`/main`/Cpp`_en`-us^+93 C`+`+]]]
+[s0;#i150;b17;a17;O0; [^topic`:`/`/BEMRosetta`/main`/Cpp`_en`-us^+93 C`+`+ 
+API][+93  and ][^topic`:`/`/BEMRosetta`/main`/Cpp`_Example`_en`-us^+93 C`+`+ 
+Example][+93 .]]]

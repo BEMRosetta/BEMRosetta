@@ -42,7 +42,7 @@ String Hydro::LoadSerialization(String fileName) {
 	
 void Hydro::SaveSerialization(String fileName) const {
 	BEM::Print("\n\n" + F(t_("Saving '%s'"), fileName));
-	if (!StoreAsJsonFile(*this, fileName, false)) {
+	if (!StoreAsJsonFile(*this, fileName, true)) {
 		BEM::PrintError("\n" + F(t_("Error saving '%s'"), fileName));
 		throw Exc(F(t_("Error saving '%s'"), fileName));
 	}

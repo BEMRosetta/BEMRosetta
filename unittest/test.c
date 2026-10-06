@@ -13,9 +13,9 @@ int main() {
 	
 		printf("BEMRosetta C demo\n");
 
-	#ifdef BEMROSETTA_DYNAMIC
+	#ifdef BEMROSETTA_DYNAMIC		// DLL is loaded in runtime
 		BEMRosetta bmr = BEMRosetta_Init("libbemrosetta.dll");
-	#else
+	#else							// DLL has to be in the .exe folder or in the PATH
 		BEMRosetta bmr = BEMRosetta_Init();
 	#endif
 	
@@ -63,7 +63,6 @@ int main() {
 		printf("\nRunning it in Capytaine");
 		system("cd /d ..\\unittest\\.test\\Capy && capytaine.bat");
 		
-		printf("\n- Loading the results from one format and converting them to other format");
 		printf("\nLoading the results in .nc format");
 		bmr.Bem.Load("..\\unittest\\.test\\Capy\\capytaine.nc");
 		printf("\nSaving the results in .h5 format");
