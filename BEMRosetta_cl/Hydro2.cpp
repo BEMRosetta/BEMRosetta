@@ -1509,7 +1509,7 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 			ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
 			type = WAMIT_1_3;
 		else if (ext == ".out")
-			type = WAMIT;
+			type = WAMIT_OUT;
 		else if (ext == ".dat")
 			type = FAST_WAMIT;	
 		else if (ext == ".bemr")
@@ -1538,7 +1538,7 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 	} else
 		save = this;
 	
-	if (type == WAMIT)
+	if (type == WAMIT_OUT)
 		static_cast<Wamit&>(*save).Save_out(fileName);			
 	else if (type == WAMIT_1_3)
 		static_cast<Wamit&>(*save).Save(fileName, Status, true, qtfHeading, heading);	

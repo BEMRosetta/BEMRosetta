@@ -318,7 +318,6 @@ void MenuAbout::Init() {
 	CtrlLayout(*this);
 	
 	String qtf = GetTopic(F("topic://BEMRosetta/main/About$en-us")); 
-	SetBuildInfo(qtf);
 	qtf.Replace("SYSTEMINFO", DeQtf(GetSystemInfo()));
 	info.SetQTF(qtf);
 	info.WhenLink = [=](const String &link) {

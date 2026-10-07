@@ -8,14 +8,12 @@
 #include "libbemrosetta.h"
 #include <ScatterDraw/ScatterDraw.h>
 
-
-void SetBuildInfo(String &str) {
+String GetBuildInfo() {
 	String name, mode;
 	Time date;
 	int version, bits;
 	GetCompilerInfo(name, version, date, mode, bits);
-	str.Replace("BUILDINFO", F("%4d%02d%02d%02d, %s, %d bits", 
-				date.year, date.month, date.day, date.hour, mode, bits)); 
+	return F("%4d%02d%02d%02d, %s, %d bits", date.year, date.month, date.day, date.hour, mode, bits); 
 }
 
 String GetSystemInfo() {
@@ -27,7 +25,7 @@ String GetSystemInfo() {
 	String systemInfo;
 	systemInfo << F(t_("BEMRosetta is at '%s'"), GetExeFilePath());
 	systemInfo << "\n" << F(t_("Build date is %s"), F(date));
-	systemInfo << "\n" << F(t_("Compiler is %s, version %d, mode %s, %d bits"), name, version, mode, bits);
+	systemInfo << "\n" << F(t_("Compiler is %s, version %d, mode %s, %d bits"), ToUpper(name), version, ToUpper(mode), bits);
 	
 	return systemInfo;
 }
@@ -74,8 +72,7 @@ BMR_Data::BMR_Data() {
 	Cout() << "BEMRosetta";
 	SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
 	
-	String str = F(". ") + t_("Copyright (c) 2026. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
-	SetBuildInfo(str);
+	String str = F(". ") + t_("Copyright (c) 2026. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta ") + GetBuildInfo();
 	Cout() << str << "\n";
 	
 	ChangeCurrentDirectory(GetExeFilePath());

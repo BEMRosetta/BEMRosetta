@@ -42,7 +42,7 @@ public:
 class BEM;
 BEM &Bem();
 
-void SetBuildInfo(String &str);
+String GetBuildInfo();
 String GetSystemInfo();
 
 bool PrintStatus(String s, int d);

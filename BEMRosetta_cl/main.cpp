@@ -20,7 +20,7 @@ String GetTppHeader(String topic) {
 
 String GetPythonDeclaration(const String &name, const String &prefix, const String &include);
 //String CleanCFromDeclaration(const String &include, bool removeSemicolon);
-String BMR_strCDeclaration(const String &include);
+String BMR_strCDeclaration(const String &include, String &help);
 String BMR_strCppDeclaration(const String &include, String &help);
 String BMR_CFunctions_List(const String &include, bool isC);
 	
@@ -119,8 +119,11 @@ CONSOLE_APP_MAIN
 			throw Exc(t_("Impossible to save DLL functions list file"));
 
 		Cout() << "\nC declarations:\n";
-		String strC = BMR_strCDeclaration(LoadFile(export_h));
-		//Cout() << strC;
+		String cHelp = GetTppHeader("C API");
+		cHelp << "[A4* C API&&]\n";
+		String strC = BMR_strCDeclaration(LoadFile(export_h), cHelp);
+		String cHelpExample = "[A4* C Example&&]\n";
+		cHelpExample << "[C2 " << SimpleCppToQtf(LoadFile(AFX(unittestFolder, "test.c")));
 		
 		Cout() << "\nC++ declarations and help:\n";
 		String cppHelp = GetTppHeader("C++ API");
@@ -145,7 +148,12 @@ CONSOLE_APP_MAIN
 			throw Exc(t_("Impossible to save C++ help"));		
  		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Cpp_Example_en-us.tpp"), cppHelpExample))
 			throw Exc(t_("Impossible to save C++ help"));
-			 		
+		
+		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "C_en-us.tpp"), cHelp))
+			throw Exc(t_("Impossible to save C help"));		
+ 		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "C_Example_en-us.tpp"), cHelpExample))
+			throw Exc(t_("Impossible to save C help"));
+				 		
 #endif
 
 #if defined(COMPILER_MSC) && defined(flagBEMR_TEST_DLL)

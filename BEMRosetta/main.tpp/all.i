@@ -2,6 +2,10 @@ TOPIC("About_en-us")
 #include "About_en-us.tppi"
 END_TOPIC
 
+TOPIC("C_Example_en-us")
+#include "C_Example_en-us.tppi"
+END_TOPIC
+
 TOPIC("Cpp_Example_en-us")
 #include "Cpp_Example_en-us.tppi"
 END_TOPIC
