@@ -398,7 +398,7 @@ static String EmitNode(const String& name, const FuncNode& node, int depth, cons
         s << ind << "#endif\n";
         s << ind << "public:\n";
         s << ind << retType << name << "(" << GetArgs(node.args) << ") {\n";
-        help << F("[A3*;l%d; ", (depth-2)*150) << ("[A1*@(150.150.150) " << fullParentClass << ".]") << name << "(" << DeQtf(GetArgs(node.args)) << ")" << "&]\n";
+        help << F("[A3*;l%d; ", (depth-2)*150) << node.retType << (" [A1*@(150.150.150) " << fullParentClass << ".]") << name << "(" << DeQtf(GetArgs(node.args)) << ")" << "&]\n";
         help << F("[A3;l%d; ",  (depth-2)*150) << node.help << "&&]\n";
         s << ind << "#ifdef BEMROSETTA_DYNAMIC\n";
 	        s << ind << "    ";
@@ -654,6 +654,9 @@ String BMR_strCppDeclaration(const String &include, String &help) {
 	ret << before
 	    << "#ifdef BEMROSETTA_DYNAMIC\n"
 	    << "    static const char * (*_BMR_GetLastError)() = 0;\n"
+	    << "    #ifdef __cplusplus\n"
+		<< "    }\n"
+		<< "    #endif\n"
 	    //<< GenerateFunctionPointers(retTypes, functions, arguments) << "\n"
 	    << "#else\n"
 	    << declaration << "\n"
@@ -673,7 +676,7 @@ void CollectLeaves(const String& fieldPath, int depth, String fullParentClass, c
 		if (child.isFunc) {
 			fieldPaths.Add(fp);
 			fullNames.Add(child.fullName);
-			help << F("[A3*;l%d; ", (depth-2)*150) << ("[A1*@(150.150.150) " << fullParentClass << ".]") << cname << "(" << DeQtf(GetArgs(child.args)) << ")" << "&]\n";
+			help << F("[A3*;l%d; ", (depth-2)*150) << child.retType << (" [A1*@(150.150.150) " << fullParentClass << ".]") << cname << "(" << DeQtf(GetArgs(child.args)) << ")" << "&]\n";
         	help << F("[A3;l%d; ",  (depth-2)*150) << child.help << "&&]\n";
 		} else {
 			help << F("[A3*;l%d; ", (depth-2)*150) << ("[A1*@(150.150.150) " << fullParentClass << ".]") << cname << "&]\n";

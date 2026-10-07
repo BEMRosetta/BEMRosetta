@@ -55,7 +55,7 @@ int main() {
 		double head[] = {0, 45, 90};
 		bmr.Bem.headings.Set(head, sizeof(head)/sizeof(double));
 
-		bmr.Bem.LoadMesh(0, idMesh);
+		bmr.Bem.Mesh.Load(0, idMesh);
 		
 		printf("\nSaving it in Capytaine format");
 		bmr.Bem.SaveCase("../unittest/.test/Capy", "Capytaine .py", false, false, true, true, "No", false, false, 1, 4, false, false);
