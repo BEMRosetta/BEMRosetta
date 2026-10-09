@@ -111,12 +111,13 @@ void MainBody::Init() {
 	menuPlot.butXoZ.SetStyle(styleGreen);
 	menuPlot.butXoY.SetStyle(styleBlue);
 	
-	menuPlot.opShowColor.Add(SurfaceView::SHOW_DARKER, "SHOW_DARKER").Add(SurfaceView::SHOW_BRIGHTER, "SHOW_BRIGHTER")
-				 .Add(SurfaceView::SHOW_FLAT, "SHOW_FLAT").SetData(0);
+	menuPlot.opShowColor.Add(SurfaceView::SHOW_DARKER, t_("Darker")).Add(SurfaceView::SHOW_BRIGHTER, t_("Brighter"))
+				 .Add(SurfaceView::SHOW_FLAT, t_("Flat")).SetData(0);
 	menuPlot.opShowColor << [&] {mainView.RenderRefresh(*this);};
+	menuPlot.opShowColor.SetIndex(SurfaceView::SHOW_BRIGHTER);
 	
-	menuPlot.opShowMesh.Add(SurfaceView::SHOW_MESH, "SHOW_MESH").Add(SurfaceView::SHOW_VISIBLE_MESH, "SHOW_VISIBLE_MESH")
-				.Add(SurfaceView::SHOW_FACES, "SHOW_FACES").Add(SurfaceView::SHOW_MESH_FACES, "SHOW_MESH_FACES").SetData(3);
+	menuPlot.opShowMesh.Add(SurfaceView::SHOW_MESH, t_("Mesh")).Add(SurfaceView::SHOW_VISIBLE_MESH, t_("Visible mesh"))
+				.Add(SurfaceView::SHOW_FACES, t_("Surface")).Add(SurfaceView::SHOW_MESH_FACES, t_("Surface & mesh")).SetData(3);
 	menuPlot.opShowMesh << [&] {
 		OnOpt();
 		mainView.ViewRefresh(*this);

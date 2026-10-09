@@ -183,8 +183,14 @@ ww.gnu.org/licenses/][2 .]&]
 [s0;2 &]
 [s0;2 &]
 [s0; Help (work in process)&]
-[s0;2 &]
-[s0;i150;O0; [^do`:help^2 In Window][2 .]&]
-[s0;i150;O0; [^https`:`/`/bemrosetta`.github`.io`/main`$BEMRosetta`$Help`_en`-us`.html^2 I
+[s0; &]
+[s0;i150;O0; [2 GUI]&]
+[s0;l160;i150;O0; [^do`:help`_GUI^2 In Window][2 .]&]
+[s0;l160;i150;O0; [^https`:`/`/bemrosetta`.github`.io`/main`$BEMRosetta`$Help`_GUI`_en`-us`.html^2 I
+n Web]&]
+[s0; &]
+[s0;i150;O0; [2 API]&]
+[s0;l160;i150;O0; [^do`:help`_API^2 In Window][2 .]&]
+[s0;l160;i150;O0; [^https`:`/`/bemrosetta`.github`.io`/main`$BEMRosetta`$Help`_API`_en`-us`.html^2 I
 n Web]&]
 [s0; ]]

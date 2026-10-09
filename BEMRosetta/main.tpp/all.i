@@ -14,8 +14,12 @@ TOPIC("Cpp_en-us")
 #include "Cpp_en-us.tppi"
 END_TOPIC
 
-TOPIC("Help_en-us")
-#include "Help_en-us.tppi"
+TOPIC("Help_API_en-us")
+#include "Help_API_en-us.tppi"
+END_TOPIC
+
+TOPIC("Help_GUI_en-us")
+#include "Help_GUI_en-us.tppi"
 END_TOPIC
 
 TOPIC("Hydro_Coeff_Process_en-us")
@@ -24,5 +28,13 @@ END_TOPIC
 
 TOPIC("Hydro_Coeff_en-us")
 #include "Hydro_Coeff_en-us.tppi"
+END_TOPIC
+
+TOPIC("Python_Example_en-us")
+#include "Python_Example_en-us.tppi"
+END_TOPIC
+
+TOPIC("Python_en-us")
+#include "Python_en-us.tppi"
 END_TOPIC
 

@@ -3,29 +3,6 @@
 // Copyright 2020 - 2026, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 
-/*
-String CleanCFromDeclaration(const String &include, bool removeSemicolon) {
-	String str = include;
-	
-	str.Replace("	__declspec(dllexport) ", "");
-	str.Replace("	L_EXPORT ", "");
-	str.Replace("extern \"C\" {", "");
-	str.Replace("};", "");
-	str.Replace("\r\n\r\n", "\r\n");
-	str.Replace(" noexcept", "");
-	str.Replace("  ", " ");
-	str.Replace("\t", " ");
-	str.Replace(" ;", ";");
-	str.Replace(" (", "(");
-	str.Replace(" )", ")");
-	
-	if (removeSemicolon) 
-		str.Replace(");", ")");
-	
-	return str;
-}*/
-
-	
 static void ListArgsCFunction(const String &strargs, const UVector <String> &ctypes, 
 						UVector<int> &argTypeId, UVector<String> &argVars) {
 	UVector<String> args = Split(strargs, ",");
@@ -68,7 +45,7 @@ static String ToArgs(const UVector<String> &args) {
 	return ret;	
 }
 
-String GetPythonDeclaration(const String &name, const String &prefix, const String &include) {
+String GetPythonDeclaration(const String &name, const String &prefix, const String &include, String &help) {
 	const UVector<String> ctypes = {"void", "double **", 									   "int *", 					   "double *", 					      "int",    	  "double",   		  "const char *", 	"bool",   		 "const double *",					"const int *"}; 
 	const UVector<String> ptypes = {"None", "ctypes.POINTER(ctypes.POINTER(ctypes.c_double))", "ctypes.POINTER(ctypes.c_int)", "ctypes.POINTER(ctypes.c_double)", "ctypes.c_int", "ctypes.c_double", "ctypes.c_char_p", "ctypes.c_bool", "ctypes.POINTER(ctypes.c_double)", "ctypes.POINTER(ctypes.c_int)"}; 
 	const UVector<bool> isPy_C   = {true,   false, 											   false, 						   false, 						      false,    	  false, 	   		  false,          	false, 	         true, 								false};
@@ -96,6 +73,8 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 	UVector<String> lines = Split(cleaned, "\n");
 	
 	bool infunctions = false;
+	UVector<String> prevfnames;
+	String helpText;
 	
 	for (String line : lines) {
 		Replace(line, "\r", "");
@@ -115,9 +94,15 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 				} 
 			}
 			
-			if (function.IsEmpty())
+			if (function.IsEmpty()) {
+				if (line.StartsWith("//")) {
+					line.Replace("//", "");
+					if (!helpText.IsEmpty())
+						helpText << "\n";
+					helpText << line;
+				}
 				continue;
-				
+			}
 			int posparout = line.Find(")");
 			String strargs = line.Mid(pospar+1, posparout - pospar-1);
 			
@@ -126,7 +111,7 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 			ListArgsCFunction(strargs, ctypes, argTypeId, argVars);
 								
 			UVector<String> pargs, cargs, pargTypes;
-			String pre, post, returns;
+			String pre, post, returns, hreturns;
 			int idata = 0;
 			bool nextIsIntp = false;
 			String prevct;
@@ -175,17 +160,23 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 					post << F("        %s = np.ctypeslib.as_array(_data%d, shape=(%s))\n", argVars[i-1], idata, dims);
 					nextIsIntp = false;
 				} else if (ctp.Find("**") > 0) {
-	        		if (!returns.IsEmpty())
-	        			 returns << ", ";
-	        		returns << var << ".copy()";
+	        		if (!returns.IsEmpty()) {
+	        			 returns  << ", ";
+	        			 hreturns << ", ";
+	        		}
+	        		returns  << var << ".copy()";
+	        		hreturns << var;
 	        		nextIsIntp = true;
 	        		prevct = ct;
 				} else if (ctp.Find("*") > 0 && ct.Find("const") < 0) {
 					cargs << F("ctypes.byref(%s)", var);
 					pre  << F("        %s = ctypes.c_%s()\n", var, ct);
-	        		if (!returns.IsEmpty())
-	        			 returns << ", ";
-	        		returns << var << ".value";
+	        		if (!returns.IsEmpty()) {
+	        			 returns  << ", ";
+	        			 hreturns << ", ";
+	        		}
+	        		returns  << var << ".value";
+	        		hreturns << var;
 				} else if (i > 0 && isC_Py[argTypeId[i-1]]) {
 					cargs << F("ctypes.byref(_size%d)", idata);
 					idata++;
@@ -227,6 +218,21 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 			if (fnames[0] == "")
 				fnames.Remove(0);
 			
+			String fullParentClass;
+			for (int i = 0; i < fnames.size()-1; ++i)
+				fullParentClass << "." << fnames[i];
+			String name = Last(fnames);
+			
+			if (fnames.size() > 1) {
+				String prev;
+				for (int i = 0; i < fnames.size()-1; ++i) {
+					if (prevfnames.size() <= i || fnames[i] != prevfnames[i])
+						help << F("[A3*;l%d; ", (i)*150) << ("[A1*@(150.150.150) " << prev << ".]") << fnames[i] << "&]\n";
+					prev << "." << fnames[i];
+				}
+			}
+			prevfnames = clone(fnames);
+			
 			fname = Last(fnames);
 			String subname;
 			int idsubname = 0;
@@ -243,10 +249,21 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 					strSubIds << (idParent < 0 ? 0 : idParent);
 				}
 			}
+			String args;
 			strSubNames[idsubname] << "    def " << fname << "(self";
-			if (!pargs.IsEmpty())
+			if (!pargs.IsEmpty()) {
+				if (!args.IsEmpty())
+					args << ", ";
+				args << ToArgs(pargs);
 				strSubNames[idsubname] << ", " << ToArgs(pargs);
+			}
 			strSubNames[idsubname] << "):\n";
+			
+			if (!hreturns.IsEmpty())
+				hreturns = "`[" + hreturns + "`] = ";
+			help << F("[A3*;l%d; ", (fnames.size()-1)*150) << hreturns << ("[A1*@(150.150.150) " << fullParentClass << ".]") << name << "(" << args << ")" << "&]\n";
+			help << F("[A3;l%d; ",  (fnames.size()-1)*150) << helpText << "&&]\n";
+			helpText.Clear();
 			
 			strSubNames[idsubname] << pre ;
 			String sret = outputType != "void" ? "_ret = " : "";
@@ -336,7 +353,7 @@ String BMR_CFunctions_List(const String &include, bool isC) {
 				line.Replace("NOEXCEPT", "");	
 				line.Replace(";", "");	
 				line = Trim(line);
-				//bool isvoid = line.StartsWith("void");
+				
 				int _pos = line.Find("_");
 				String retType = Trim(line.Left(_pos));
 				line = line.Mid(_pos);
@@ -398,7 +415,7 @@ static String EmitNode(const String& name, const FuncNode& node, int depth, cons
         s << ind << "#endif\n";
         s << ind << "public:\n";
         s << ind << retType << name << "(" << GetArgs(node.args) << ") {\n";
-        help << F("[A3*;l%d; ", (depth-2)*150) << node.retType << (" [A1*@(150.150.150) " << fullParentClass << ".]") << name << "(" << DeQtf(GetArgs(node.args)) << ")" << "&]\n";
+        help << F("[A3*;l%d; ", (depth-2)*150) << (" [A2*@(150.150.255) " << node.retType << "]") << (" [A1@(150.150.150) " << fullParentClass << ".]") << name << "(" << DeQtf(GetArgs(node.args)) << ")" << "&]\n";
         help << F("[A3;l%d; ",  (depth-2)*150) << node.help << "&&]\n";
         s << ind << "#ifdef BEMROSETTA_DYNAMIC\n";
 	        s << ind << "    ";
@@ -676,7 +693,7 @@ void CollectLeaves(const String& fieldPath, int depth, String fullParentClass, c
 		if (child.isFunc) {
 			fieldPaths.Add(fp);
 			fullNames.Add(child.fullName);
-			help << F("[A3*;l%d; ", (depth-2)*150) << child.retType << (" [A1*@(150.150.150) " << fullParentClass << ".]") << cname << "(" << DeQtf(GetArgs(child.args)) << ")" << "&]\n";
+			help << F("[A3*;l%d; ", (depth-2)*150) << (" [A2*@(150.150.255) " << child.retType << "]") << (" [A1@(150.150.150) " << fullParentClass << ".]") << cname << "(" << DeQtf(GetArgs(child.args)) << ")" << "&]\n";
         	help << F("[A3;l%d; ",  (depth-2)*150) << child.help << "&&]\n";
 		} else {
 			help << F("[A3*;l%d; ", (depth-2)*150) << ("[A1*@(150.150.150) " << fullParentClass << ".]") << cname << "&]\n";

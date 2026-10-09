@@ -321,8 +321,11 @@ void MenuAbout::Init() {
 	qtf.Replace("SYSTEMINFO", DeQtf(GetSystemInfo()));
 	info.SetQTF(qtf);
 	info.WhenLink = [=](const String &link) {
-		if (link == "do:help") {
-			help.GoTo("topic://BEMRosetta/main/Help_en-us");
+		if (link == "do:help_GUI") {
+			help.GoTo("topic://BEMRosetta/main/Help_GUI_en-us");
+			help.Open();	
+		} else if (link == "do:help_API") {
+			help.GoTo("topic://BEMRosetta/main/Help_API_en-us");
 			help.Open();	
 		} else {
 			if (PromptOKCancelOpt(t_("This will open your web browser to:") + F("&") + DeQtf(link), "open_external_url"))

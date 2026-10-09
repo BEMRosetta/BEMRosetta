@@ -11,6 +11,7 @@
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)	
 
 String SimpleCppToQtf(const String& code);
+String SimplePythonToQtf(const String& code);
 
 String GetTppHeader(String topic) {
 	return F("topic \"%s\";\n"
@@ -18,14 +19,14 @@ String GetTppHeader(String topic) {
 			 "[{_}%%EN-US\n", topic);
 }
 
-String GetPythonDeclaration(const String &name, const String &prefix, const String &include);
+String GetPythonDeclaration(const String &name, const String &prefix, const String &include, String &help);
 //String CleanCFromDeclaration(const String &include, bool removeSemicolon);
 String BMR_strCDeclaration(const String &include, String &help);
 String BMR_strCppDeclaration(const String &include, String &help);
 String BMR_CFunctions_List(const String &include, bool isC);
 	
-String BMR_strPythonDeclaration(String export_h) {
-	return GetPythonDeclaration("BEMRosetta", "_BMR", export_h);	
+String BMR_strPythonDeclaration(String export_h, String &help) {
+	return GetPythonDeclaration("BEMRosetta", "_BMR", export_h, help);	
 }
 
 String BMR_strListFunctions(String export_h) {
@@ -120,21 +121,26 @@ CONSOLE_APP_MAIN
 
 		Cout() << "\nC declarations:\n";
 		String cHelp = GetTppHeader("C API");
-		cHelp << "[A4* C API&&]\n";
+		cHelp << "[A4* C API&&]&";
 		String strC = BMR_strCDeclaration(LoadFile(export_h), cHelp);
-		String cHelpExample = "[A4* C Example&&]\n";
+		String cHelpExample = "[A4* C Example&&]";
 		cHelpExample << "[C2 " << SimpleCppToQtf(LoadFile(AFX(unittestFolder, "test.c")));
 		
 		Cout() << "\nC++ declarations and help:\n";
 		String cppHelp = GetTppHeader("C++ API");
-		cppHelp << "[A4* C`+`+ API&&]\n";
+		cppHelp << "[A4* C`+`+ API&&]&";
 		String strCpp = BMR_strCppDeclaration(LoadFile(export_h), cppHelp);
-		String cppHelpExample = "[A4* C`+`+ Example&&]\n";
+		String cppHelpExample = "[A4* C`+`+ Example&&]";
 		cppHelpExample << "[C2 " << SimpleCppToQtf(LoadFile(AFX(unittestFolder, "test.cpp")));
 		
 		Cout() << "\nPython declarations:\n";
-		String strPy = BMR_strPythonDeclaration(LoadFile(export_h));
-		//Cout() << strPy;
+		String pyHelp = GetTppHeader("Python API");
+		pyHelp << "[A4* Python API&&]&";
+		String strPy = BMR_strPythonDeclaration(LoadFile(export_h), pyHelp);
+		String pyHelpExample = "[A4* Python Example&&]";
+		pyHelpExample << "[C2 " << SimplePythonToQtf(LoadFile(AFX(unittestFolder, "test.py")));
+		
+		
 		
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		if (!SaveFile(AFX(binFolder, "libbemrosetta.py"), strPy))
@@ -147,13 +153,18 @@ CONSOLE_APP_MAIN
  		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Cpp_en-us.tpp"), cppHelp))
 			throw Exc(t_("Impossible to save C++ help"));		
  		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Cpp_Example_en-us.tpp"), cppHelpExample))
-			throw Exc(t_("Impossible to save C++ help"));
+			throw Exc(t_("Impossible to save C++ example"));
 		
 		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "C_en-us.tpp"), cHelp))
 			throw Exc(t_("Impossible to save C help"));		
  		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "C_Example_en-us.tpp"), cHelpExample))
-			throw Exc(t_("Impossible to save C help"));
-				 		
+			throw Exc(t_("Impossible to save C example"));
+
+		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Python_en-us.tpp"), pyHelp))
+			throw Exc(t_("Impossible to save Python help"));	
+ 		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Python_Example_en-us.tpp"), pyHelpExample))
+			throw Exc(t_("Impossible to save Python example"));
+							 		
 #endif
 
 #if defined(COMPILER_MSC) && defined(flagBEMR_TEST_DLL)

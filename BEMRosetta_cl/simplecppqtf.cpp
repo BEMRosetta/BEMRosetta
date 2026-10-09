@@ -109,7 +109,6 @@ bool IsNumberChar(int c) {
 
 }
 
-
 String SimpleCppToQtf(const String& code) {
     String qtf;
 
@@ -135,13 +134,11 @@ String SimpleCppToQtf(const String& code) {
 
                 ++i;
             }
-
             AppendToken(qtf, code.Mid(start, i - start),
                         TokenType::Normal);
             continue;
         }
-
-        if (beginning_of_line && c == '#') {		// Preeprocessor directive.
+        if (beginning_of_line && c == '#') {		// Preprocessor directive.
             ++i;
 
             while (i < count) {
@@ -170,7 +167,6 @@ String SimpleCppToQtf(const String& code) {
             AppendToken(qtf, code.Mid(start, i - start), TokenType::Comment);
             continue;
         }
-
         if (c == '/' && i + 1 < count && code[i + 1] == '*') {		// Block comment
             i += 2;
 
@@ -188,7 +184,6 @@ String SimpleCppToQtf(const String& code) {
             AppendToken(qtf, code.Mid(start, i - start), TokenType::Comment);
             continue;
         }
-
         if (c == '"' || c == '\'') {			// String or character literal
             char quote = c;
             ++i;
@@ -212,7 +207,6 @@ String SimpleCppToQtf(const String& code) {
             AppendToken(qtf, code.Mid(start, i - start), TokenType::String);
             continue;
         }
-
         if (IsCppIdentifierStart(c)) {			// Identifier or keyword
             ++i;
 
@@ -225,7 +219,6 @@ String SimpleCppToQtf(const String& code) {
             AppendToken(qtf, word, IsCppKeyword(word) ? TokenType::Keyword : TokenType::Normal);
             continue;
         }
-
         if (IsDigit(c) || (c == '.' && i + 1 < count && IsDigit((byte)code[i + 1]))) {	// Numeric literal
             ++i;
 
@@ -236,11 +229,221 @@ String SimpleCppToQtf(const String& code) {
             AppendToken(qtf, code.Mid(start, i - start), TokenType::Number);
             continue;
         }
-
         AppendToken(qtf, code.Mid(i, 1), TokenType::Normal);		// Operator or punctuation
         ++i;
     }
     qtf << "]";
 
+    return qtf;
+}
+
+namespace {
+
+bool IsPythonIdentifierStart(int c) {// Accept UTF-8 bytes without performing Unicode validation.
+    return IsAlpha(c) || c == '_' || c >= 128;
+}
+
+bool IsPythonIdentifierChar(int c) {
+    return IsPythonIdentifierStart(c) || IsDigit(c);
+}
+
+bool IsPythonKeyword(const String& word) {
+    static const Index<String> keywords = [] {
+        Index<String> k;
+
+        const char *words[] = {
+            "False", "None", "True",
+            "and", "as", "assert", "async", "await",
+            "break", "class", "continue", "def", "del",
+            "elif", "else", "finally", "for",
+            "global", "if", "in",
+            "is", "lambda", "nonlocal", "not", "or",
+            "pass", "raise", "return", "while",
+            "with", "yield"
+        };
+        for (const char *word : words)
+            k.Add(word);
+
+        return k;
+    }();
+
+    return keywords.Find(word) >= 0;
+}
+
+bool IsPythonKeyword2(const String& word) {
+    static const Index<String> keywords = [] {
+        Index<String> k;
+
+        const char *words[] = {
+            "except", "from", "import", "try"
+        };
+        for (const char *word : words)
+            k.Add(word);
+
+        return k;
+    }();
+
+    return keywords.Find(word) >= 0;
+}
+
+bool IsPythonStringPrefix(const String& word) {
+    String p = ToLower(word);
+
+    return p == "r"  || p == "u"  || p == "b" ||
+           p == "f"  || p == "t"  ||
+           p == "br" || p == "rb" ||
+           p == "fr" || p == "rf" ||
+           p == "tr" || p == "rt";
+}
+
+// 'i' initially points to the opening quote, after any prefix.
+void ScanPythonString(const String& code, int& i) {
+    int count = code.GetCount();
+    char quote = code[i];
+
+    bool triple = i + 2 < count && code[i + 1] == quote && code[i + 2] == quote;
+
+    i += triple ? 3 : 1;
+
+    while (i < count) {
+        if (code[i] == '\\') {		// Escaped quote, backslash, or physical newline.
+            if(i + 2 < count && code[i + 1] == '\r' && code[i + 2] == '\n')
+                i += 3;
+            else
+                i += min(2, count - i);
+
+            continue;
+        }
+        if (code[i] == quote) {
+            if(!triple) {
+                ++i;
+                return;
+            }
+            if(i + 2 < count && code[i + 1] == quote && code[i + 2] == quote) {
+                i += 3;
+                return;
+            }
+        }
+        if (!triple && (code[i] == '\n' || code[i] == '\r'))	// Recover from an unterminated single-line string.
+            return;
+
+        ++i;
+    }
+}
+
+bool IsPythonBaseDigit(int c, int base) {
+    if (c >= '0' && c <= '9')
+        return c - '0' < base;
+
+    return base == 16 && ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'));
+}
+
+void ScanPythonNumber(const String& code, int& i) {
+    int count = code.GetCount();
+
+    if (code[i] == '0' && i + 1 < count) {	// Binary, octal, or hexadecimal integer.
+        int base = 0;
+
+        switch (code[i + 1]) {
+        case 'b': case 'B': base = 2;  break;
+        case 'o': case 'O': base = 8;  break;
+        case 'x': case 'X': base = 16; break;
+        }
+        if (base) {
+            i += 2;
+
+            while (i < count &&
+                  (IsPythonBaseDigit((byte)code[i], base) ||
+                   code[i] == '_'))
+                ++i;
+            return;
+        }
+    }
+    while (i < count && (IsDigit((byte)code[i]) || code[i] == '_'))	// Decimal integer or floating-point mantissa.
+        ++i;
+
+    if (i < count && code[i] == '.') {
+        ++i;
+        while(i < count && (IsDigit((byte)code[i]) || code[i] == '_'))
+            ++i;
+    }
+    if (i < count && (code[i] == 'e' || code[i] == 'E')) {			// Optional exponent. Signs belong here, not elsewhere.
+        int exponent = i++;
+
+        if(i < count && (code[i] == '+' || code[i] == '-'))
+            ++i;
+
+        if(i < count && IsDigit((byte)code[i])) {
+            while(i < count &&
+                  (IsDigit((byte)code[i]) || code[i] == '_'))
+                ++i;
+        }
+        else
+            i = exponent;
+    }
+    if (i < count && (code[i] == 'j' || code[i] == 'J'))		// Imaginary-number suffix.
+        ++i;
+}
+
+}
+
+String SimplePythonToQtf(const String& code) {
+    String qtf;
+    qtf << "[C ";
+
+    int i = 0;
+    int count = code.GetCount();
+
+    while (i < count) {
+        int start = i;
+        int c = (byte)code[i];
+
+        if(c == '#') {							// Comment.
+            while(i < count && code[i] != '\n' && code[i] != '\r')
+                ++i;
+
+            AppendToken(qtf, code.Mid(start, i - start), TokenType::Comment);
+            continue;
+        }
+        if (c == '\'' || c == '"') {				// String without a prefix.
+            ScanPythonString(code, i);
+
+            AppendToken(qtf, code.Mid(start, i - start),
+                        TokenType::String);
+            continue;
+        }
+        if (IsPythonIdentifierStart(c)) {			// Identifier, keyword, or string prefix.
+            ++i;
+
+            while (i < count && IsPythonIdentifierChar((byte)code[i]))
+                ++i;
+
+            String word = code.Mid(start, i - start);
+
+            if (i < count && (code[i] == '\'' || code[i] == '"') && IsPythonStringPrefix(word)) {
+                ScanPythonString(code, i);
+
+                AppendToken(qtf, code.Mid(start, i - start),
+                            TokenType::String);
+            } else if (IsPythonKeyword(word))
+                AppendToken(qtf, word, TokenType::Keyword);
+            else if (IsPythonKeyword2(word))
+                AppendToken(qtf, word, TokenType::Preprocessor);
+            else 
+                AppendToken(qtf, word, TokenType::Normal);
+
+            continue;
+        }
+        if (IsDigit(c) || (c == '.' && i + 1 < count && IsDigit((byte)code[i + 1]))) {	// Numeric literal.
+            ScanPythonNumber(code, i);
+
+            AppendToken(qtf, code.Mid(start, i - start), TokenType::Number);
+            continue;
+        }
+        AppendToken(qtf, code.Mid(i, 1), TokenType::Normal);	// Whitespace, operators, and punctuation.
+        ++i;
+    }
+
+    qtf << "]";
     return qtf;
 }
