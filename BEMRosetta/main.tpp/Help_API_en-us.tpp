@@ -29,8 +29,7 @@ uses CMake or another compilation strategy. The library can be
 accessed in either of two ways:]&]
 [s0;+92 &]
 [s0;i150;O0; [+92 Linking with libbemrosetta.lib.]&]
-[s0;i150;O0; [+92 Loading the dynamic library at runtime, using the 
-DLL on Windows.]&]
+[s0;i150;O0; [+92 Loading the dynamic library at runtime (DLL on Windows)]&]
 [s0;+92 &]
 [s0; [+92 Python provides access to similar operations through its 
 own interface, using Python data structures rather than the C/C`+`+ 
@@ -66,46 +65,47 @@ and read or modify parameters in .dat and .fst input files.]&]
 [s0; [*+92 Working with the API]&]
 [s0;+92 &]
 [s0; [+92 Mesh, BEM and OpenFAST operations use an active mesh or model, 
-selected through its identifier,rather than a pointer or a complex 
+selected through its identifier, rather than a pointer or a complex 
 structure. Applications use these IDs to identify the objects 
 they want to work with, while BEMRosetta manages their internal 
 representation. This allows several meshes or cases to be loaded 
 and the required one to be selected for subsequent operations.]&]
 [s0;+92 &]
-[s0; [+92 All features available in the GUI are also available in the 
-API, and vice versa. If you notice that a feature is missing 
+[s0; [+92 All features available in the GUI may be also available in 
+the API, and vice versa. If you notice that a feature is missing 
 from one that you have seen in the other, please let us know, 
 since both use the same library and such features are usually 
 very easy to add.]&]
 [s0;+92 &]
 [s0; [*+92 How to start in C`+`+]&]
 [s0;+92 &]
-[s0; [+92 Include at the beginning ][C@(160.80.0)+92 `"libbemrosetta.hpp`"][+92 .]&]
+[s0; [+92 Include ][C@(160.80.0)+92 `"libbemrosetta.hpp`"][+92  at the 
+beginning.]&]
 [s0;+92 &]
 [s0; [+92 And create a variable with the path to the dynamic library 
 to the constructor:]&]
 [s0;+92 &]
-[s0; [C+92 BEMRosetta mybemr(][C@(163.21.21)+92 `"PATH TO/libbemrosetta.dll`"][C+92 ;]&]
+[s0; [C+92 BEMRosetta mybemr(][C@(163.21.21)+92 `"PATH TO/libbemrosetta.dll`"][C+92 );]&]
 [s0;+92 &]
 [s0; [*+92 How to start in C]&]
 [s0;+92 &]
-[s0; [+92 Include at the beginning ][C@(160.80.0)+92 `"libbemrosetta.h`"][+92 .]&]
+[s0; [+92 Include ][C@(160.80.0)+92 `"libbemrosetta.h`"][+92  at the beginning.]&]
 [s0;+92 &]
 [s0; [+92 And create a variable with the path to the dynamic library 
 to the constructor:]&]
 [s0;+92 &]
-[s0; [C+92 BEMRosetta mybemr `= BEMRosetta`_Init(][C@(163.21.21)+92 `"PATH 
-TO/libbemrosetta.dll`"][C+92 );]&]
+[s0; [C+92 BEMRosetta mybemr `= BEMRosetta`_Init(][C@(163.21.21)+92 `"PATH`_TO/libbemrose
+tta.dll`"][C+92 );]&]
 [s0;+92 &]
 [s0; [*+92 How to start in Python]&]
 [s0;*+92 &]
-[s0; [+92 Include at the beginning ][C@(160.80.0)+92 from][C+92  libbemrosetta 
-][C@(160.80.0)+92 import][C+92  BEMRosetta]&]
+[s0; [+92 Include ][C@(160.80.0)+92 from][C+92  libbemrosetta ][C@(160.80.0)+92 import][C+92  
+BEMRosetta][+92  at the beginning.]&]
 [s0;+92 &]
 [s0; [+92 And create a variable with the path to the dynamic library 
 to the constructor:]&]
 [s0;+92 &]
-[s0; [C+92 mybemr `= BEMRosetta(][C@(163.21.21)+92 `"PATH TO/libbemrosetta.dll`"][C+92 )]&]
+[s0; [C+92 mybemr `= BEMRosetta(][C@(163.21.21)+92 `"PATH`_TO/libbemrosetta.dll`"][C+92 )]&]
 [s0;+92 &]
 [s0; [*+92 API function descriptions and examples]&]
 [s0;+92 &]

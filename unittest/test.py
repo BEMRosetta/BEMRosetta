@@ -6,22 +6,22 @@ from libbemrosetta import BEMRosetta
 print("libbemrosetta.py test")
 
 try:
-    bemr = BEMRosetta("./.test/libbemrosetta.dll")
+    bmr = BEMRosetta("./.test/libbemrosetta.dll")
 
-    print(bemr.Version())
+    print(bmr.Version())
     
-    bemr.Mesh.Load("../examples/hydrostar/Mesh/Ship.hst")
-    bemr.Mesh.Save("./.test/kk.gdf", ".gdf", 0, 0)
-    bemr.Mesh.Load("./.test/kk.gdf")
-    _, volx, voly, volz = bemr.Mesh.Volume.Get()
+    bmr.Mesh.Load("../examples/hydrostar/Mesh/Ship.hst")
+    bmr.Mesh.Save("./.test/kk.gdf", ".gdf", 0, 0)
+    bmr.Mesh.Load("./.test/kk.gdf")
+    _, volx, voly, volz = bmr.Mesh.Volume.Get()
     print(f"Volume            x: {volx}, y: {voly}, z: {volz}")
-    _, volx, voly, volz  = bemr.Mesh.UnderwaterVolume.Get()
+    _, volx, voly, volz  = bmr.Mesh.UnderwaterVolume.Get()
     print(f"Underwater volume x: {volx}, y: {voly}, z: {volz}")
-    print(f"Surface            : {bemr.Mesh.Surface.Get()}")
-    print(f"Underwater surface : {bemr.Mesh.UnderwaterSurface.Get()}")
-    bemr.Mesh.Cg.Set(0, 0, -1)
-    bemr.Mesh.C0.Set(0, 0, -1)
-    print(f"Stiffness matrix   : {bemr.Mesh.HydrostaticStiffness.Get()}")
+    print(f"Surface            : {bmr.Mesh.Surface.Get()}")
+    print(f"Underwater surface : {bmr.Mesh.UnderwaterSurface.Get()}")
+    bmr.Mesh.Cg.Set(0, 0, -1)
+    bmr.Mesh.C0.Set(0, 0, -1)
+    print(f"Stiffness matrix   : {bmr.Mesh.HydrostaticStiffness.Get()}")
     
     os.remove("./.test/kk.gdf")
     
