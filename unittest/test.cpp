@@ -60,7 +60,7 @@ int main() {
 		printf("\nSaving the results in .h5 format");
 		bmr.Bem.Save("..\\unittest\\.test\\Capy\\capytaine.h5");
 		
-	} catch(std::runtime_error e) {
+	} catch(const std::runtime_error &e) {
 		printf("\nError found: %s", e.what());
 	} catch (...) {
 		printf("\nError found");

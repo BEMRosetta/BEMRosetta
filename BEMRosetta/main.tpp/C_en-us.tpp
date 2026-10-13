@@ -9,7 +9,7 @@ Sets a callback called when an error is produced&&]
 DLL functionsLibrary initialisation&&]
 [A3*;l0;  [A2*@(150.150.255) const char *] [A1@(150.150.150) .]Version()&]
 [A3;l0; 
-Returns the library time and date&&]
+Returns the library version time and date&&]
 [A3*;l0;  [A2*@(150.150.255) void] [A1@(150.150.150) .]EnablePrint(bool print)&]
 [A3;l0; 
 Enables or disables message printing by the functions&&]
@@ -23,19 +23,19 @@ Clears the last error&&]
 [A3*;l150; [A1*@(150.150.150) .Wamit.]V6s&]
 [A3*;l300;  [A2*@(150.150.255) void] [A1@(150.150.150) .Wamit.V6s.]Set(int force)&]
 [A3;l300; 
-Consider that the Wamit solver to run the cases will be always WamitV6s&&]
+If force = 1 considers that the Wamit solver to run the cases will be always WamitV6s&&]
 [A3*;l0; [A1*@(150.150.150) .]AQWA&]
 [A3*;l150; [A1*@(150.150.150) .AQWA.]ShowCalculationDialog&]
 [A3*;l300;  [A2*@(150.150.255) void] [A1@(150.150.150) .AQWA.ShowCalculationDialog.]Set(int show)&]
 [A3;l300; 
-Show the calculation dialog when running AQWA&&]
+Is show = 1, shows the calculation dialog when running AQWA&&]
 [A3*;l0; [A1*@(150.150.150) .]Mesh&]
 [A3*;l150;  [A2*@(150.150.255) void] [A1@(150.150.150) .Mesh.]Clear()&]
 [A3;l150; 
 Clear all meshes previously loaded&&]
 [A3*;l150;  [A2*@(150.150.255) int] [A1@(150.150.150) .Mesh.]Load(const char `*file)&]
 [A3;l150; 
-Loads a mesh file&&]
+Loads a mesh file. Returns the mesh id.&&]
 [A3*;l150;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.]Report()&]
 [A3;l150; 
 Prints main mesh data&&]
@@ -45,13 +45,13 @@ Prints main mesh data&&]
 Sets the id of the active mesh&&]
 [A3*;l300;  [A2*@(150.150.255) int] [A1@(150.150.150) .Mesh.Id.]Get()&]
 [A3;l300; 
-Gets the id of the active mesh&&]
+Returns the id of the active mesh&&]
 [A3*;l150;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.]Save(const char `*file`, const char `*format`, int symX`, int symY)&]
 [A3;l150; 
-Saves the mesh in the indicated file with the mesh format&&]
-[A3*;l150;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.]Translate(double x`, double y`, double z)&]
+Saves the mesh in the indicated file with the mesh format, forcing symmetry in the YZ plane (symX = 1) and in the XZ plane (symY = 1)&&]
+[A3*;l150;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.]Translate(double dx`, double dy`, double dz)&]
 [A3;l150; 
-Translates the mesh&&]
+Translates the mesh a distance&&]
 [A3*;l150;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.]Rotate(double ax`, double ay`, double az`, double cx`, double cy`, double cz)&]
 [A3;l150; 
 Rotates the mesh. ax,ay,az are the angles in degrees, cx, cy, cz is the centre of rotation&&]
@@ -61,14 +61,14 @@ Rotates the mesh. ax,ay,az are the angles in degrees, cx, cy, cz is the centre o
 Sets the centre of gravity&&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.Cg.]Get(double `*x`, double `*y`, double `*z)&]
 [A3;l300; 
-Gets the centre of gravity&&]
+Returns the centre of gravity&&]
 [A3*;l150; [A1*@(150.150.150) .Mesh.]C0&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.C0.]Set(double x`, double y`, double z)&]
 [A3;l300; 
 Sets the centre of rotation or reference system&&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.C0.]Get(double `*x`, double `*y`, double `*z)&]
 [A3;l300; 
-Gets the centre of rotation or reference system&&]
+Returns the centre of rotation or reference system&&]
 [A3*;l150; [A1*@(150.150.150) .Mesh.]Mass&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.Mass.]Set(double mass)&]
 [A3;l300; 
@@ -123,11 +123,11 @@ Returns the body wet surface&&]
 [A3*;l300; [A1*@(150.150.150) .Mesh.Centre.]Volume&]
 [A3*;l450;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.Centre.Volume.]Get(double `*x`, double `*y`, double `*z)&]
 [A3;l450; 
-Gets the centroid of the body&&]
+Returns the centroid of the body&&]
 [A3*;l300; [A1*@(150.150.150) .Mesh.Centre.]Surface&]
 [A3*;l450;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.Centre.Surface.]Get(double `*x`, double `*y`, double `*z)&]
 [A3;l450; 
-Gets the centre of gravity of the surface&&]
+Returns the centre of gravity of the surface&&]
 [A3*;l150; [A1*@(150.150.150) .Mesh.]HydrostaticStiffness&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.HydrostaticStiffness.]Get(double `*`*data`, int dim`[2`])&]
 [A3;l300; 
@@ -135,18 +135,18 @@ Returns the hydrostatic stiffness matrix&&]
 [A3*;l150; [A1*@(150.150.150) .Mesh.]NumPanels&]
 [A3*;l300;  [A2*@(150.150.255) int] [A1@(150.150.150) .Mesh.NumPanels.]Get()&]
 [A3;l300; 
-Gets the number of panels of the mesh&&]
+Returns the number of panels of the mesh&&]
 [A3*;l150; [A1*@(150.150.150) .Mesh.]VolumeEnvelope&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.VolumeEnvelope.]Get(double `*minx`, double `*maxx`, double `*miny`, double `*maxy`, double `*minz`, double `*maxz)&]
 [A3;l300; 
-Gets the envelope around the mesh&&]
+Returns the envelope around the mesh&&]
 [A3*;l150; [A1*@(150.150.150) .Mesh.]Name&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.Name.]Set(const char `*name)&]
 [A3;l300; 
 Sets the name of the body&&]
 [A3*;l300;  [A2*@(150.150.255) const char *] [A1@(150.150.150) .Mesh.Name.]Get()&]
 [A3;l300; 
-Gets the name of the body&&]
+Returns the name of the body&&]
 [A3*;l0; [A1*@(150.150.150) .]Bem&]
 [A3*;l150;  [A2*@(150.150.255) void] [A1@(150.150.150) .Bem.]Clear()&]
 [A3;l150; 
@@ -160,7 +160,7 @@ Creates a new model model&&]
 Sets the name of the active model&&]
 [A3*;l300;  [A2*@(150.150.255) const char *] [A1@(150.150.150) .Bem.Name.]Get()&]
 [A3;l300; 
-Gets the name of the active model&&]
+Returns the name of the active model&&]
 [A3*;l150;  [A2*@(150.150.255) int] [A1@(150.150.150) .Bem.]Load(const char `*file)&]
 [A3;l150; 
 Loads a BEM case&&]
@@ -173,10 +173,10 @@ Saves a BEM case&&]
 Sets the id of the active model&&]
 [A3*;l300;  [A2*@(150.150.255) int] [A1@(150.150.150) .Bem.Id.]Get()&]
 [A3;l300; 
-Gets the id of the active model&&]
+Returns the id of the active model&&]
 [A3*;l150;  [A2*@(150.150.255) int] [A1@(150.150.150) .Bem.]size()&]
 [A3;l150; 
-Gets the number of bem cases&&]
+Returns the number of bem cases&&]
 [A3*;l150;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.]Support(const char `*solver`, int `*irregular`, int `*autoIrregular`, int `*middle7`, int `*far8`, int `*near9`, int `*autoCS`, int `*multibody)&]
 [A3;l150; 
 Returns the multibody and QTF capabilities of the solver: "Wamit .out", "AQWA .dat","OrcaWave .yml", "HydroStar .hsg", "HAMS", "HAMS MREL", "Nemoh v3", "Diffrac .xml", "Capytaine .py"&&]
@@ -202,20 +202,20 @@ Sets the density&&]
 Sets the range of frequencies&&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.w.]Get(double `*`*data`, int dim`[1`])&]
 [A3;l300; 
-Gets the range of frequencies&&]
+Returns the range of frequencies&&]
 [A3*;l300;  [A2*@(150.150.255) int] [A1@(150.150.150) .Bem.w.]size()&]
 [A3;l300; 
-Gets the number of frequencies&&]
+Returns the number of frequencies&&]
 [A3*;l150; [A1*@(150.150.150) .Bem.]headings&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.headings.]Set(const double `*head`, int dim)&]
 [A3;l300; 
 Sets the range of headings&&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.headings.]Get(double `*`*data`, int dim`[1`])&]
 [A3;l300; 
-Gets the range of headings&&]
+Returns the range of headings&&]
 [A3*;l300;  [A2*@(150.150.255) int] [A1@(150.150.150) .Bem.headings.]size()&]
 [A3;l300; 
-Gets the number of headings&&]
+Returns the number of headings&&]
 [A3*;l150;  [A2*@(150.150.255) int] [A1@(150.150.150) .Bem.]Duplicate()&]
 [A3;l150; 
 Copies a Bem case into other&&]
@@ -225,7 +225,7 @@ Saves the Bem case&&]
 [A3*;l150; [A1*@(150.150.150) .Bem.]FroudeKrylov&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.FroudeKrylov.]Calc()&]
 [A3;l300; 
-Gets the incident or Froude-Krylov wave force for all the bodies&&]
+Returns the incident or Froude-Krylov wave force for all the bodies&&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.FroudeKrylov.]Set(int idBody`, int idBemFrom`, int idBodyFrom)&]
 [A3;l300; 
 Sets the Froude-Krylov force of body idBody with the Froude-Krylov force of body idBodyFrom from the Bem case idBemFrom&&]
@@ -242,7 +242,7 @@ Sets the diffraction force of body idBody with the diffraction force of body idB
 Fill with zeroes for all the bodies the excitation forces&&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.Excitation.]GetFromDiffFK()&]
 [A3;l300; 
-Gets the excitation force by summing the Froude-Krylov and diffraction scattering forces&&]
+Returns the excitation force by summing the Froude-Krylov and diffraction scattering forces&&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.Excitation.]Set(int idBody`, int idBemFrom`, int idBodyFrom)&]
 [A3;l300; 
 Sets the excitation force of body idBody with the excitation force of body idBodyFrom from the Bem case idBemFrom&&]
@@ -269,7 +269,7 @@ Maps the potentials on another mesh, creating a new case. rad, diff and inc indi
 Loads a mesh from a loaded mesh&&]
 [A3*;l300;  [A2*@(150.150.255) int] [A1@(150.150.150) .Bem.Mesh.]size()&]
 [A3;l300; 
-Gets the number of bem cases&&]
+Returns the number of bem cases&&]
 [A3*;l150; [A1*@(150.150.150) .Bem.]Lid&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Bem.Lid.]Load(int idBody`, int idMesh)&]
 [A3;l300; 

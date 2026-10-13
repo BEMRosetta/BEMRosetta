@@ -400,8 +400,8 @@ class _Mesh:
         self._raise_if_error()
         return _ret
 
-    def Translate(self, x, y, z):
-        _ret = self.libc._BMR_Mesh_Translate(x, y, z)
+    def Translate(self, dx, dy, dz):
+        _ret = self.libc._BMR_Mesh_Translate(dx, dy, dz)
         self._raise_if_error()
         return _ret
 

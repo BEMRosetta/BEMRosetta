@@ -63,7 +63,7 @@
 
 	// Library initialisation
 	L_EXPORT void _BMR_Init() NOEXCEPT;
-	// Returns the library time and date
+	// Returns the library version time and date
 	L_EXPORT const char *_BMR_Version() NOEXCEPT; 		
 	// Enables or disables message printing by the functions
 	L_EXPORT void _BMR_EnablePrint(bool print) NOEXCEPT;
@@ -73,35 +73,35 @@
 	// Clears the last error
 	L_EXPORT void _BMR_ClearLastError() NOEXCEPT;
 	
-	// Consider that the Wamit solver to run the cases will be always WamitV6s
+	// If force = 1 considers that the Wamit solver to run the cases will be always WamitV6s
 	L_EXPORT void _BMR_Wamit_V6s_Set(int force) NOEXCEPT;
 	
-	// Show the calculation dialog when running AQWA
+	// Is show = 1, shows the calculation dialog when running AQWA
 	L_EXPORT void _BMR_AQWA_ShowCalculationDialog_Set(int show) NOEXCEPT;
 		
 	// Clear all meshes previously loaded	
 	L_EXPORT void _BMR_Mesh_Clear() NOEXCEPT;
-	// Loads a mesh file
+	// Loads a mesh file. Returns the mesh id.
 	L_EXPORT int _BMR_Mesh_Load(const char *file) NOEXCEPT;
 	// Prints main mesh data
 	L_EXPORT bool _BMR_Mesh_Report() NOEXCEPT;
 	// Sets the id of the active mesh
 	L_EXPORT bool _BMR_Mesh_Id_Set(int id) NOEXCEPT;
-	// Gets the id of the active mesh
+	// Returns the id of the active mesh
 	L_EXPORT int _BMR_Mesh_Id_Get() NOEXCEPT;
-	// Saves the mesh in the indicated file with the mesh format
+	// Saves the mesh in the indicated file with the mesh format, forcing symmetry in the YZ plane (symX = 1) and in the XZ plane (symY = 1)
 	L_EXPORT bool _BMR_Mesh_Save(const char *file, const char *format, int symX, int symY) NOEXCEPT;
-	// Translates the mesh
-	L_EXPORT bool _BMR_Mesh_Translate(double x, double y, double z) NOEXCEPT;
+	// Translates the mesh a distance
+	L_EXPORT bool _BMR_Mesh_Translate(double dx, double dy, double dz) NOEXCEPT;
 	// Rotates the mesh. ax,ay,az are the angles in degrees, cx, cy, cz is the centre of rotation
 	L_EXPORT bool _BMR_Mesh_Rotate(double ax, double ay, double az, double cx, double cy, double cz) NOEXCEPT;
 	// Sets the centre of gravity
 	L_EXPORT bool _BMR_Mesh_Cg_Set(double x, double y, double z) NOEXCEPT;
-	// Gets the centre of gravity
+	// Returns the centre of gravity
 	L_EXPORT bool _BMR_Mesh_Cg_Get(double *x, double *y, double *z) NOEXCEPT;
 	// Sets the centre of rotation or reference system
 	L_EXPORT bool _BMR_Mesh_C0_Set(double x, double y, double z) NOEXCEPT;		
-	// Gets the centre of rotation or reference system
+	// Returns the centre of rotation or reference system
 	L_EXPORT bool _BMR_Mesh_C0_Get(double *x, double *y, double *z) NOEXCEPT;		
 	// Sets the mesh mass	
 	L_EXPORT bool _BMR_Mesh_Mass_Set(double mass) NOEXCEPT;	
@@ -131,19 +131,19 @@
 	L_EXPORT double _BMR_Mesh_Surface_Get() NOEXCEPT;
 	// Returns the body wet surface
 	L_EXPORT double _BMR_Mesh_UnderwaterSurface_Get() NOEXCEPT;
-	// Gets the centroid of the body
+	// Returns the centroid of the body
 	L_EXPORT bool _BMR_Mesh_Centre_Volume_Get(double *x, double *y, double *z) NOEXCEPT;
-	// Gets the centre of gravity of the surface
+	// Returns the centre of gravity of the surface
 	L_EXPORT bool _BMR_Mesh_Centre_Surface_Get(double *x, double *y, double *z) NOEXCEPT;
 	// Returns the hydrostatic stiffness matrix
 	L_EXPORT bool _BMR_Mesh_HydrostaticStiffness_Get(double **data, int dim[2]) NOEXCEPT;
-	// Gets the number of panels of the mesh
+	// Returns the number of panels of the mesh
 	L_EXPORT int _BMR_Mesh_NumPanels_Get() NOEXCEPT;
-	// Gets the envelope around the mesh
+	// Returns the envelope around the mesh
 	L_EXPORT bool _BMR_Mesh_VolumeEnvelope_Get(double *minx, double *maxx, double *miny, double *maxy, double *minz, double *maxz) NOEXCEPT;
 	// Sets the name of the body
 	L_EXPORT bool _BMR_Mesh_Name_Set(const char *name) NOEXCEPT;
-	// Gets the name of the body
+	// Returns the name of the body
 	L_EXPORT const char *_BMR_Mesh_Name_Get() NOEXCEPT;
 		
 	// Clear loaded models
@@ -152,7 +152,7 @@
 	L_EXPORT int _BMR_Bem_New() NOEXCEPT;
 	// Sets the name of the active model
 	L_EXPORT bool _BMR_Bem_Name_Set(const char *name) NOEXCEPT;
-	// Gets the name of the active model
+	// Returns the name of the active model
 	L_EXPORT const char *_BMR_Bem_Name_Get() NOEXCEPT;
 	// Loads a BEM case
 	L_EXPORT int _BMR_Bem_Load(const char *file) NOEXCEPT;
@@ -160,9 +160,9 @@
 	L_EXPORT bool _BMR_Bem_Save(const char *file) NOEXCEPT;
 	// Sets the id of the active model
 	L_EXPORT bool _BMR_Bem_Id_Set(int id) NOEXCEPT;
-	// Gets the id of the active model
+	// Returns the id of the active model
 	L_EXPORT int _BMR_Bem_Id_Get() NOEXCEPT;
-	// Gets the number of bem cases
+	// Returns the number of bem cases
 	L_EXPORT int _BMR_Bem_size() NOEXCEPT;
 	// Returns the multibody and QTF capabilities of the solver: "Wamit .out", "AQWA .dat",
 	// "OrcaWave .yml", "HydroStar .hsg", "HAMS", "HAMS MREL", "Nemoh v3", "Diffrac .xml", "Capytaine .py"
@@ -177,28 +177,28 @@
 	L_EXPORT bool _BMR_Bem_rho_Set(double rho) NOEXCEPT;
 	// Sets the range of frequencies
 	L_EXPORT bool _BMR_Bem_w_Set(const double *w, int dim) NOEXCEPT;
-	// Gets the range of frequencies
+	// Returns the range of frequencies
 	L_EXPORT bool _BMR_Bem_w_Get(double **data, int dim[1]) NOEXCEPT;
-	// Gets the number of frequencies
+	// Returns the number of frequencies
 	L_EXPORT int _BMR_Bem_w_size() NOEXCEPT;
 	// Sets the range of headings
 	L_EXPORT bool _BMR_Bem_headings_Set(const double *head, int dim) NOEXCEPT;
-	// Gets the range of headings
+	// Returns the range of headings
 	L_EXPORT bool _BMR_Bem_headings_Get(double **data, int dim[1]) NOEXCEPT;
-	// Gets the number of headings
+	// Returns the number of headings
 	L_EXPORT int _BMR_Bem_headings_size() NOEXCEPT;
 	// Copies a Bem case into other
 	L_EXPORT int _BMR_Bem_Duplicate() NOEXCEPT;
 	// Saves the Bem case
 	L_EXPORT bool _BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z, bool irregular, bool autoIrregular, const char *qtfType, bool autoQTF, bool bin, int numCases, int numThreads, bool withPotentials, bool withMesh) NOEXCEPT;
 	
-	// Gets the incident or Froude-Krylov wave force for all the bodies
+	// Returns the incident or Froude-Krylov wave force for all the bodies
 	L_EXPORT bool _BMR_Bem_FroudeKrylov_Calc() NOEXCEPT;
 	// Fill with zeroes for all the bodies the diffraction forces
 	L_EXPORT bool _BMR_Bem_Diffraction_Reset() NOEXCEPT;
 	// Fill with zeroes for all the bodies the excitation forces
 	L_EXPORT bool _BMR_Bem_Excitation_Reset() NOEXCEPT;
-	// Gets the excitation force by summing the Froude-Krylov and diffraction scattering forces
+	// Returns the excitation force by summing the Froude-Krylov and diffraction scattering forces
 	L_EXPORT bool _BMR_Bem_Excitation_GetFromDiffFK() NOEXCEPT;		// GetFexFromFscFfk
 	// Fill with zeroes for all the bodies the added mass
 	L_EXPORT bool _BMR_Bem_AddedMass_Reset() NOEXCEPT;
@@ -223,7 +223,7 @@
 	L_EXPORT bool _BMR_Bem_Lid_Load(int idBody, int idMesh) NOEXCEPT;
 	// Loads a control surface from a loaded mesh
 	L_EXPORT bool _BMR_Bem_ControlSurface_Load(int idBody, int idMesh) NOEXCEPT;
-	// Gets the number of bem cases
+	// Returns the number of bem cases
 	L_EXPORT int _BMR_Bem_Mesh_size() NOEXCEPT;
 		
 	// Loads a FAST .out or .outb file

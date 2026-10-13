@@ -4,7 +4,7 @@
 
 void my_error_handler(const char *message, void *dummy) {
 	printf("\nError %s", message);
-	printf("\nClick Enter to end");
+	printf("\Press Enter to end");
 	getchar();	
 	exit(-1);
 }
@@ -19,7 +19,7 @@ int main() {
 		BEMRosetta bmr = BEMRosetta_Init();
 	#endif
 	
-		bmr.SetErrorHandler(my_error_handler, 0);
+		bmr.SetErrorHandler(my_error_handler, NULL);
 		printf("\nBEMRosetta version is %s\n", bmr.Version());
 
 		printf("\n- Mesh handling");
