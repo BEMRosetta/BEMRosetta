@@ -36,6 +36,8 @@ FreqSelector::FreqSelector() {
 };
 
 void Main::Init(bool firstTime) {
+	isInInit = true;
+	
 	BEM::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
 	BEM::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
 	BEM::PrintError   = [this](String s) {printf("%s", ~s); /*tab.Set(mainOutput); */Status(s);	Exclamation(DeQtfLf(s));};
@@ -168,14 +170,19 @@ void Main::Init(bool firstTime) {
 			LaunchCommand(F("\"%s\" -gui time", GetExeFilePath()));
 	};
 
-	tab.WhenSet = [&] {
+	tab.WhenSet = [=] {
 		LOGTAB(tab);
 		if (tab.IsAt(menuOptionsScroll)) 
 			menuOptions.Load();
 		else if (tab.IsAt(mainSolver))			// mainNemohScroll)) 
 			mainSolver.Load();
-		if (!tab.IsAt(menuOptionsScroll) && menuOptions.IsChanged()) {
-			if (PromptYesNo(t_("Options have changed&Do you want to save them?")))
+		bool restart;
+		if (!isInInit && !tab.IsAt(menuOptionsScroll) && menuOptions.IsChanged(restart)) {
+			String prompt = t_("Options have changed&Do you want to save them?");
+			if (restart)
+				prompt << "&" << t_("Some changes will be applied on next restart");
+			
+			if (PromptYesNo(prompt))
 				menuOptions.OnSave();
 			else
 				menuOptions.Load();
@@ -218,6 +225,8 @@ void Main::Init(bool firstTime) {
 	tab.WhenSet();
 	
 	AddFrame(bar);
+	
+	isInInit = false;
 }
 
 void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
@@ -591,16 +600,13 @@ GUI_APP_MAIN {
 	if (!Bem().ClearTempFiles()) 
 		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
 	
-	SetLanguage(GetSystemLNG());
-	SetLanguage(LNG_('E', 'N', 'U', 'S'));
-
 	Font fnt = GetStdFont();
 	int height = int(fnt.GetHeight()*(Bem().guiScale/100.));
 	fnt.Height(height);
 	SetStdFont(fnt); 
 	
 	#if defined(PLATFORM_WIN32) 
-	Hdf5File::Init();				// To avoid problems between HDF5 and CrashHandler with MSVC
+	Hdf5File::Init();				// To avoid problems between HDF5 and CrashHandler with MSVC, HDF5 has to be started at the beginning
 	GetCrashHandler().Enable();
 	#ifndef flagDEBUG
 	if (EM().Init("BEMRosetta", "BEMRosetta", EM().DefaultExitError, Null))

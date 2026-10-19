@@ -7,7 +7,7 @@
 String OffBody::LoadOff(UArray<Body> &_mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return F(t_("Impossible to open '%s'"), fileName);
 	
 	String line;
 	LineParser f(in);	
@@ -67,22 +67,22 @@ String OffBody::LoadOff(UArray<Body> &_mesh, String fileName) {
 void OffBody::SaveOff(String fileName, const Surface &surf) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(t_(Format("Impossible to open '%s'", fileName)));
+		throw Exc(F(t_("Impossible to open '%s'"), fileName));
 
 	const UVector<Panel> &panels = surf.panels;
 	const UVector<Point3D> &nodes = surf.nodes;
 		
 	out << "OFF\n";
 	
-	out << Format("%d %d %d\n", nodes.size(), panels.size(), 0);
+	out << F("%d %d %d\n", nodes.size(), panels.size(), 0);
 
 	for (int n = 0; n < nodes.size(); n++) 
-		out << Format("%f %f %f\n", nodes[n].x, nodes[n].y, nodes[n].z);
+		out << F("%f %f %f\n", nodes[n].x, nodes[n].y, nodes[n].z);
 
 	for (int n = 0; n < panels.size(); n++) {
 		if (panels[n].IsTriangle())
-			out << Format("3 %d %d %d\n", panels[n].id[0], panels[n].id[1], panels[n].id[2]);
+			out << F("3 %d %d %d\n", panels[n].id[0], panels[n].id[1], panels[n].id[2]);
 		else
-			out << Format("4 %d %d %d %d\n", panels[n].id[0], panels[n].id[1], panels[n].id[2], panels[n].id[3]);
+			out << F("4 %d %d %d %d\n", panels[n].id[0], panels[n].id[1], panels[n].id[2], panels[n].id[3]);
 	}
 }

@@ -11,6 +11,10 @@
 #include <BEMRosetta_cl/BEMRosetta.h>
 #include <BEMRosetta_cl/functions.h>
 
+#define TFILE <BEMRosetta/BEMRosetta.t>
+#include <Core/t.h>
+
+
 using namespace Upp;
 
 #include "main.h"

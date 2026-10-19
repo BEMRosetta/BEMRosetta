@@ -309,7 +309,7 @@ String FastOut::LoadOutb(String file, Function <bool(String, int)> Status) {
 
 	FileInBinary fin(file);
 	if (!fin.IsOpen())
-		return t_(F("Impossible to open '%s'", file));
+		return F(t_("Impossible to open '%s'"), file);
 
 	Status(F(t_("Loading '%s' header"), ::GetFileName(file)), 0);
 	
@@ -1266,8 +1266,8 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 	if (dataFast.size() > 1) {
 		UVector<Value> &t = table.Add();
 		t << t_("Total");
-		t << t_("-");
-		t << t_("-");
+		t << "-";
+		t << "-";
 		VectorXd data(table.size()-1), time(table.size()-1);
 		int col = 3;
 		for (int ip = 0; ip < params.params.size(); ip++) {

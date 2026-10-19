@@ -16,9 +16,9 @@ using namespace Eigen;
 void GridBody::TableHeaders(const Hydro &hy, double head, bool pot, UVector<String> &str, UVector<char> &group, UVector<int> &col) {
 	const char *xyz[] = {"x", "y", "z"};
 	
-	str.Clear();			group.Clear();		col.Clear();
+	str.Clear();		group.Clear();		col.Clear();
 	
-	str << t_("#");			group << 'n';		col << 0;
+	str << "#";			group << 'n';		col << 0;
 	
 	if (hy.IsLoadedMesh()) {
 		int n = 0;

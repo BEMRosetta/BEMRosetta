@@ -7,6 +7,10 @@
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
 
+#define TFILE <BEMRosetta/BEMRosetta.t>
+#include <Core/t.h>
+
+
 using namespace Upp;
 
 #define IMAGECLASS ImgF

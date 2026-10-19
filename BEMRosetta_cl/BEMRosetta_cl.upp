@@ -89,6 +89,7 @@ file
 	functions.h,
 	Simulation.cpp,
 	Simulation.h,
+	BEMRosetta_cl.t,
 	Copying;
 
 mainconfig

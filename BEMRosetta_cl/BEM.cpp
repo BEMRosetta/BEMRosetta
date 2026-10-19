@@ -18,14 +18,14 @@ Function <void(String)> BEM::PrintError   = [](String s) {Cout() << "\n" << t_("
 
 const char *BEM::strDOFtext[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
 const char *BEM::strDOFtextAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
-const char *BEM::strDOFnum[] 	 = {t_("1"), t_("2"), t_("3"), t_("4"), t_("5"), t_("6")};
-const char *BEM::strDOFnum_sub[] = {t_("₁"), t_("₂"), t_("₃"), t_("₄"), t_("₅"), t_("₆")};
-const char *BEM::strDOFxyz[] 	 = {t_("x"), t_("y"), t_("z"), t_("rx"), t_("ry"), t_("rz")};
+const char *BEM::strDOFnum[] 	 = {"1", "2", "3", "4", "5", "6"};
+const char *BEM::strDOFnum_sub[] = {"₁", "₂", "₃", "₄", "₅", "₆"};
+const char *BEM::strDOFxyz[] 	 = {"x", "y", "z", "rx", "ry", "rz"};
 	
-const char *BasicBEM::strDOFType[] = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
+const char *BasicBEM::strDOFType[] = {"1,2,3,4,5,6", t_("surge,sway,"), "x,y,z,rx,ry,rz", ""};
 BasicBEM::DOFType BEM::dofType = BasicBEM::DOFSurgeSway;
 
-const char *BasicBEM::strHeadingType[] = {t_("-180->180º"), t_("0->360º"), ""};
+const char *BasicBEM::strHeadingType[] = {"-180->180º", "0->360º", ""};
 BasicBEM::HeadingType BEM::headingType = BasicBEM::HEAD_180_180;
 	
 

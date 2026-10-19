@@ -11,6 +11,8 @@
 #include <BEMRosetta_cl/orca.h>
 #endif
 
+#define TFILE <BEMRosetta/BEMRosetta.t>
+#include <Core/t.h>
 
 class Main;
 
@@ -284,7 +286,7 @@ public:
 	void Init(BEM &bem);
 	void Load();
 	void OnSave();
-	bool IsChanged();
+	bool IsChanged(bool &restart);
 	void InitSerialize(bool ret, bool &openOptions);
 	
 private:
@@ -295,7 +297,6 @@ class MenuAbout : public WithMenuAbout<StaticRect> {
 public:
 	typedef MenuAbout CLASSNAME;
 	void Init();
-	//void HelpHandler(String &str);
 
 private:
 	HelpWindow help;
@@ -870,8 +871,8 @@ public:
 		Add(grid.SizePos());
 			
 		grid.Editing().Sorting(false);
-		grid.AddColumn(t_(""), 0);					// The id
-		grid.AddColumn(t_(""), 10).Option();
+		grid.AddColumn("", 0);					// The id
+		grid.AddColumn("", 10).Option();
 		grid.AddColumn(t_("Name"), 20);
 		grid.AddColumn(t_("File name"), 100);
 	}
@@ -1059,6 +1060,9 @@ public:
 	Body mesh, lid, cs;
 	
 	void SetTexts(bool updateInertia = false);
+
+private:
+	GridEditors edM, edDlin, edDquad, edCadd, edCmoor;
 };
 
 class MainSolver : public WithMainSolver<StaticRect> {
@@ -1880,6 +1884,8 @@ private:
 	
 	StatusBar bar;
 
+	bool isInInit;
+	
 public:
 	MainSolver &GetMainSolver()	{return mainSolver;}
 };

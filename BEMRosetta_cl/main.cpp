@@ -6,6 +6,10 @@
 #include <SysInfo/Crash.h>
 #include "libbemrosetta.h"
 
+#define TFILE <BEMRosetta_cl/BEMRosetta_cl.t>
+#include <Core/t.h>
+
+
 #ifdef PLATFORM_WIN32
 
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)	
@@ -20,7 +24,6 @@ String GetTppHeader(String topic) {
 }
 
 String GetPythonDeclaration(const String &name, const String &prefix, const String &include, String &help);
-//String CleanCFromDeclaration(const String &include, bool removeSemicolon);
 String BMR_strCDeclaration(const String &include, String &help);
 String BMR_strCppDeclaration(const String &include, String &help);
 String BMR_CFunctions_List(const String &include, bool isC);

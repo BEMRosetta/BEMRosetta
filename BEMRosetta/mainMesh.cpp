@@ -14,6 +14,9 @@
 #define IMAGEFILE <BEMRosetta/main.iml>
 #include <Draw/iml.h>
 
+#define TFILE <BEMRosetta/BEMRosetta.t>
+#include <Core/t.h>
+
 
 using namespace Upp;
 
@@ -510,7 +513,7 @@ void MainBody::Init() {
 	mainViewData.Init();
 	splitterAll.Horz(mainView.SizePos(), mainViewData.SizePos());
 	splitterAll.SetPositions(6000, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
-	splitterAll.Tip(t_("")).WhenAction = [&] {mainView.SetPaintSelect(splitterAll.GetPos() < 9900);};
+	splitterAll.Tip("").WhenAction = [&] {mainView.SetPaintSelect(splitterAll.GetPos() < 9900);};
 	mainTab.Add(splitterAll.SizePos(), t_("View"));
 	
 	String bitmapFolder = AFX(GetDesktopFolder(), "BEMRosetta Body Images");
@@ -590,7 +593,7 @@ void MainBody::Init() {
 		if (plot && !Bem().fast.IsEmpty())
 			tabMenuAnimation.Text(t_("Animation"));
 		else
-			tabMenuAnimation.Text(t_(""));
+			tabMenuAnimation.Text("");
 		
 		if (convertProcess) {
 			tabMenuProcess.Text(t_("Process"));

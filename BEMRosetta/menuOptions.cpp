@@ -81,6 +81,8 @@ void MenuOptions::Load() {
 	windowTitle <<= bem->windowTitle;
 	opT <<= bem->opT;
 	opNoWind <<= bem->opNoWind;
+	langDrop.Languages(bem->languages);
+	langDrop.SetLanguage(bem->language);
 	
 	dofType.SetIndex(bem->dofType);
 	headingType.SetIndex(bem->headingType);
@@ -98,8 +100,12 @@ void MenuOptions::OnSave() {
 	if (Trim(~nemohPathGREN) != "" && !FileExists(~nemohPathGREN))
 		warning << F("'%s' file doesn't exist\n", ~nemohPathGREN);
 	
-	if (warning.IsEmpty() || 
-		ErrorOKCancel(DeQtfLf(F(t_("Some errors found:\n%s Do you wish to save them?"), warning)))) {
+	if (warning.IsEmpty() || ErrorOKCancel(DeQtfLf(F(t_("Some errors found:\n%s Do you wish to save them?"), warning)))) {
+		bool restart;
+		bool isChanged = IsChanged(restart);
+		if (restart)
+			PromptOK(t_("Some changes will be applied on next restart"));
+	
 		bem->g = ~g;
 		bem->rho = ~rho;
 		bem->len = ~len;
@@ -137,6 +143,7 @@ void MenuOptions::OnSave() {
 		bem->windowTitle = ~windowTitle;
 		bem->opT = ~opT;
 		bem->opNoWind = ~opNoWind;
+		bem->language = langDrop.GetLanguage();
 		
 		bem->dofType = BasicBEM::DOFType(dofType.GetIndex());
 		bem->headingType = BasicBEM::HeadingType(headingType.GetIndex());
@@ -147,7 +154,8 @@ void MenuOptions::OnSave() {
 	Ma().SetLastTab();
 }
 
-bool MenuOptions::IsChanged() {
+bool MenuOptions::IsChanged(bool &restart) {
+	restart = false;
 	if (!EqualDecimals(bem->g, double(~g), 8)) 
 		return true;
 	if (!EqualDecimals(bem->rho, double(~rho), 8))
@@ -216,14 +224,21 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->zeroIfEmpty != ~zeroIfEmpty)
 		return true;
-	if (bem->guiScale != ~guiScale)
+	if (bem->guiScale != ~guiScale) {
+		restart = true;
 		return true;
-	if (bem->windowTitle != ~windowTitle)
+	}
+	if (bem->windowTitle != ~windowTitle) {
+		restart = true;
 		return true;
+	}
 	if (bem->opT != ~opT)
 		return true;
 	if (bem->opNoWind != ~opNoWind)
 		return true;
-							
+	if (bem->language != langDrop.GetLanguage()) {
+		restart = true;
+		return true;
+	}
 	return false;
 }

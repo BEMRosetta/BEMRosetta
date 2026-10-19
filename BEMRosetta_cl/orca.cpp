@@ -160,7 +160,11 @@ bool Orca::InitDll(String _dllFile) {
 	GetDataRowCount_	   = DLLGetFunction(dll, void, C_GetDataRowCountW,		  (THHANDLE handle, LPCWSTR name, int *lpCount, int *status));
 	GetDataInteger		   = DLLGetFunction(dll, void, C_GetDataIntegerW,		  (THHANDLE handle, LPCWSTR name, int index, int *lpData, int *status));
 	GetDataDouble		   = DLLGetFunction(dll, void, C_GetDataDoubleW,		  (THHANDLE handle, LPCWSTR name, int index, double *lpData, int *status));
-	GetDataString		   = DLLGetFunction(dll, int,  C_GetDataStringW,		  (THHANDLE handle, LPCWSTR name, int index, LPWSTR lpData, int *status));
+	GetDataString		   = DLLGetFunction(dll, int,  C_GetDataStringW,		  (THHANDLE handle, LPCWSTR name, int index, LPCWSTR lpData, int *status));
+
+	SetDataInteger		   = DLLGetFunction(dll, void, C_SetDataIntegerW,		  (THHANDLE handle, LPCWSTR name, int index, int data, int *status));
+	SetDataDouble		   = DLLGetFunction(dll, void, C_SetDataDoubleW,		  (THHANDLE handle, LPCWSTR name, int index, double data, int *status));
+	SetDataString		   = DLLGetFunction(dll, int,  C_SetDataStringW,		  (THHANDLE handle, LPCWSTR name, int index, LPCWSTR lpData, int *status));
 	
 	SetModelThreadCount    = DLLGetFunction(dll, void, C_SetModelThreadCount, 	  (THHANDLE handle, int threadCount, int *status));
 	GetModelThreadCount    = DLLGetFunction(dll, int,  C_GetModelThreadCount,     (THHANDLE handle, int *status));
@@ -540,6 +544,33 @@ String Orca::GetString(THHANDLE /*handle*/, const wchar_t *name, int id) {
 	return WideToString(wcs, len);
 }
 
+void Orca::SetInt(THHANDLE handle, const wchar_t *name, int val, int id) {
+	int status;
+	
+	SetDataInteger(handle, name, id, val, &status);
+	if (status != 0)
+		throwError(F("Load SetDataInteger %s", name));	
+}
+
+void Orca::SetDouble(THHANDLE handle, const wchar_t *name, double val, int id) {
+	int status;
+	
+	SetDataDouble(handle, name, id, val, &status);
+	if (status != 0)
+		throwError(F("Load SetDataDouble %s", name));	
+}
+	
+void Orca::SetString(THHANDLE /*handle*/, const wchar_t *name, const String &val, int id) {
+	int status;
+	
+	LPCWSTR wcs;
+	StringToWide(val, wcs); 
+	
+	SetDataString(wave, name, -1, wcs, &status);
+	if (status != 0)
+		throwError(F("Load SetDataString %s", name));	
+}
+
 void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	int sz, wrongsz;
 	
@@ -887,7 +918,29 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 									sz/Np, (int)sizeof(TDiffractionPanelGeometry_1_6)));	
 		LoadDiffractionPanelGeometry<TDiffractionPanelGeometry_1_6>(hy, sz, factor, Np, panelId, panelIb);	
 	}	
-	
+
+	const wchar_t *sdof[] = {L"x", L"y", L"z", L"Rx", L"Ry", L"Rz"};
+	wchar_t name[100];
+	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+		SetInt(wave, L"SelectedBodyIndex", ib+1, 0);
+		hy.dt.msh[ib].dt.Cadd.resize(6, 6);
+		for (int col = 0; col < 6; ++col) {
+			swprintf(name, 100, L"BodyExternalStiffnessMatrix%ls", sdof[col]);
+		    for (int row = 0; row < 6; ++row)
+		        hy.dt.msh[ib].dt.Cadd(row, col) = GetDouble(wave, name, row + 1)*factor.K(row, col);
+		}
+		if (hy.dt.msh[ib].dt.Cadd.maxCoeff() < EPS_LEN)
+			hy.dt.msh[ib].dt.Cadd = Eigen::MatrixXd();
+		hy.dt.msh[ib].dt.Dlin.resize(6, 6);
+		for (int col = 0; col < 6; ++col) {
+			swprintf(name, 100, L"BodyExternalDampingMatrix%ls", sdof[col]);
+		    for (int row = 0; row < 6; ++row)
+		        hy.dt.msh[ib].dt.Dlin(row, col) = GetDouble(wave, name, row + 1)*factor.Dlin(row, col);;
+		}
+		if (hy.dt.msh[ib].dt.Dlin.maxCoeff() < EPS_LEN)
+			hy.dt.msh[ib].dt.Dlin = Eigen::MatrixXd();
+	}
+		
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
 		hy.dt.msh[ib].AfterLoad(hy.dt.rho, hy.dt.g, false, true);
 	

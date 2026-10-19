@@ -7,7 +7,7 @@
 String WamitBody::Load_dat(UArray<Body> &mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(F("Impossible to open '%s'", fileName));
+		return F(t_("Impossible to open '%s'"), fileName);
 	
 	try {
 		String line;
@@ -165,7 +165,7 @@ String WamitBody::Load(UArray<Body> &mesh, String fileName) {
 String WamitBody::Load_gdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z, double &g) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(F("Impossible to open '%s'", fileName));
+		return F(t_("Impossible to open '%s'"), fileName);
 	
 	try {
 		String line;
@@ -360,7 +360,7 @@ void WamitBody::Save_hst(String fileName, double rho, double g) const {
 String WamitBody::Load_fdf(UArray<Body> &_mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(F("Impossible to open '%s'", fileName));
+		return F(t_("Impossible to open '%s'"), fileName);
 
 	Body &body = _mesh.Add();
 	body.dt.name = GetFileName(fileName);

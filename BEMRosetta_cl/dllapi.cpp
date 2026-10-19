@@ -442,6 +442,28 @@ int _BMR_Mesh_GetControlSurface(double distance, double ratio, int quads, int bo
 	return BMR().meshid;
 }
 
+int _BMR_Mesh_GetControlSurfaceIds(const double *mids, int dim, double distance, double ratio, int quads, int bottom, int top) noexcept {
+	try {
+		if (Bem().surfs.IsEmpty()) 
+			throw Exc(t_("No mesh is loaded"));
+		if (ratio < 0 || ratio > 100)
+			throw Exc(F(t_("Wrong mesh ratio %s"), ratio));
+		if (!bottom && !top)
+			throw Exc(t_("Some surface has to be indicated, bottom/side or top"));
+		if (dim < 0 || dim > 100)
+			throw Exc(F(t_("Incorrect dim %d"), dim));
+		UVector<int> ids;
+		for (int i = 0; i < dim; ++i)
+			ids << mids[i];
+		Bem().GetCS(ids, distance, ratio, quads, bottom, top);
+		BMR().meshid = Bem().surfs.size() - dim;
+	} catch(Exc err) {
+		BMR().errorStr = err;
+		return NullInt;
+	}
+	BMR().errorStr.Clear();
+	return BMR().meshid;
+}
 				
 bool _BMR_Mesh_Volume_Get(double *vx, double *vy, double *vz) noexcept {
 	try {

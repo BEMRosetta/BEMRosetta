@@ -1363,10 +1363,10 @@ void Hydro::SaveMap(Grid &g, int ifr, bool onlyDiagonal, const UVector<int> &ids
 	g.SetNumHeaderRows(1);
 	g.SetRow(0);
 	int col = 0;
-	g.Set(Null, col++, t_("Id"));	g.AddCol(30);
-	g.Set(Null, col++, t_("x"));	g.AddCol(60);
-	g.Set(Null, col++, t_("y"));	g.AddCol(60);
-	g.Set(Null, col++, t_("z"));	g.AddCol(60);
+	g.Set(Null, col++, t_("Id")); g.AddCol(30);
+	g.Set(Null, col++, "x");	  g.AddCol(60);
+	g.Set(Null, col++, "y");	  g.AddCol(60);
+	g.Set(Null, col++, "z");	  g.AddCol(60);
 
 	if (Apan.size() > 0) {
 		if (onlyDiagonal) {

@@ -28,7 +28,7 @@ String AQWABody::LoadLis(UArray<Body> &msh, String fileName, double g, bool &y0z
 String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(F("Impossible to open '%s'", fileName));
+		return F(t_("Impossible to open '%s'"), fileName);
 		
 	hy.dt.symX = hy.dt.symY = false;
 	
@@ -211,7 +211,7 @@ String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileNa
 String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(F("Impossible to open '%s'", fileName));
+		return F(t_("Impossible to open '%s'"), fileName);
 	
 	double factorLength = 1;
 	
@@ -603,7 +603,6 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 			ret << "      SYMY\n";
 
 		ret
-			//<< "      *SEAG         ( 81, 51,-270.24102, 339.52305,-230.62436, 230.62436)" << "\n"
 			<< "      ZLWL          (        0.)" << "\n";	// Free surface height is zero
 		if (userLidSize)
 			ret << F("%6d%s   %d (LID_SIZE=%.3f)\n", ib+1, "ILID AUTO", 60+ib, lidSize[ib]);	// Irregular frequencies removal, user supplied automatic lid size
@@ -698,7 +697,6 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "********************************************************************************\n"
 	<< "*********************************** DECK  6 ************************************\n"
 	<< "********************************************************************************\n";	
-	//bool found0 = false, found180 = false;
 	UVector<double> head180;
 	for (int i = 0; i < head.size(); ++i) {
 		double hd = FixHeading_180(head[i]);

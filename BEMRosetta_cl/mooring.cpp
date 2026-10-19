@@ -348,7 +348,7 @@ const Mooring::Connection &Mooring::GetConnection(String name) const {
 	const Mooring::Connection *p = GetConnectionP(name);	
 	if (p) 
 		return *p;
-	throw Exc(t_(F("Connection '%s' is not found", name)));
+	throw Exc(F(t_("Connection '%s' is not found"), name));
 }
 
 Mooring::LineType &Mooring::GetLineType(String name) {
@@ -356,7 +356,7 @@ Mooring::LineType &Mooring::GetLineType(String name) {
 		if (line.name == name)
 			return line;
 	}
-	throw Exc(t_(F("Line type '%s' is not found", name)));
+	throw Exc(F(t_("Line type '%s' is not found"), name));
 }
 
 bool Mooring::FindClosest(Mooring::ClosestInfo &info) {

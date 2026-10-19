@@ -2,6 +2,8 @@
 // Copyright 2020 - 2026, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 
+#define TFILE <BEMRosetta_cl/BEMRosetta_cl.t>
+#include <Core/t.h>
 	
 const UVector<Body::MeshInfo> Body::meshInfo = {
     {Body::WAMIT_GDF,     "Wamit .gdf",      true,   "*.gdf"},

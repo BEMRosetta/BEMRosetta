@@ -8,6 +8,9 @@
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
 
+#define TFILE <BEMRosetta/BEMRosetta.t>
+#include <Core/t.h>
+
 #include <BEMRosetta_cl/BEMRosetta.h>
 
 using namespace Upp;
@@ -27,11 +30,11 @@ struct HeadFreqConvert : Convert {
 	}
 };
 
-void InitGrid(GridCtrl &grid) {
+void InitGrid(GridCtrl &grid, GridEditors &ed) {
 	grid.Reset();
 	grid.Absolute().Editing().Clipboard().Sorting(false).FixedPaste().MultiSelect().SelectRow(false);
 	for (int i = 0; i < 6; ++i)
-		grid.AddColumn(InitCaps(BEM::StrDOF(i))).Edit(Single<EditDouble>()).SetConvert(Single<ConvertRound>());
+		grid.AddColumn(InitCaps(BEM::StrDOF(i))).Edit(ed.Add<EditDouble>()).SetConvert(Single<ConvertRound>());
 	for (int y = 0; y < 6; ++y)
 		for (int x = 0; x < 6; ++x)
 			grid.Set(y, x, 0.);
@@ -78,11 +81,11 @@ MainSolverBody::MainSolverBody() {
 		y_0 <<= ~y_g;
 		z_0 <<= ~z_g;
 	};	
-	InitGrid(M);
-	InitGrid(Dlin);
-	InitGrid(Dquad);	
-	InitGrid(Cadd);
-	InitGrid(Cmoor);
+	InitGrid(M, edM);
+	InitGrid(Dlin, edDlin);
+	InitGrid(Dquad, edDquad);	
+	InitGrid(Cadd, edCadd);
+	InitGrid(Cmoor, edCmoor);
 	
 	butMesh << [&]() {
 		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
@@ -324,9 +327,9 @@ void MainSolver::Init() {
 	
 	gen.opFreq.WhenAction = [&] {
 		switch (gen.opFreq) {
-		case 0:		gen.listFreq.Set("Wave periods", "T", "s");			break;
-		case 1:		gen.listFreq.Set("Wave frequencies", "ω", "rad/s");	break;
-		default:	gen.listFreq.Set("Wave frequencies", "ω", "Hz");
+		case 0:		gen.listFreq.Set(t_("Wave periods"), "T", "s");			break;
+		case 1:		gen.listFreq.Set(t_("Wave frequencies"), "ω", "rad/s");	break;
+		default:	gen.listFreq.Set(t_("Wave frequencies"), "ω", "Hz");
 		}		
 		MessageMaxFreq();
 	};
@@ -334,8 +337,8 @@ void MainSolver::Init() {
 }
 
 void MainSolver::InitBeforeSerialize() {
-	gen.listFreq.InitBeforeSerialize("Wave frequencies", "ω", "rad/s", 0.1, 6, 100);
-	gen.listHead.InitBeforeSerialize("Wave directions/headings", "Head", "deg", 0, 180, 5);
+	gen.listFreq.InitBeforeSerialize(t_("Wave frequencies"), "ω", "rad/s", 0.1, 6, 100);
+	gen.listHead.InitBeforeSerialize(t_("Wave directions/headings"), "Head", "deg", 0, 180, 5);
 	
 	CtrlLayout(gen);
 	CtrlLayout(bodies);

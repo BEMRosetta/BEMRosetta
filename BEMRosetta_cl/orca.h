@@ -989,7 +989,7 @@ private:
 	void (*GetDataRowCount_)(THHANDLE handle, LPCWSTR name, int *lpCount, int *status);
 	void (*GetDataInteger)(THHANDLE handle, LPCWSTR name, int index, int *lpData, int *status);
 	void (*GetDataDouble)(THHANDLE handle, LPCWSTR name, int index, double *lpData, int *status);
-	int (*GetDataString)(THHANDLE handle, LPCWSTR name, int index, LPWSTR lpData, int *status);
+	int (*GetDataString)(THHANDLE handle, LPCWSTR name, int index, LPCWSTR lpData, int *status);
 	
 	int GetDataType(THHANDLE handle, const wchar_t *name);
 	int GetDataRowCount(THHANDLE handle, const wchar_t *name);
@@ -997,6 +997,13 @@ private:
 	double GetDouble(THHANDLE handle, const wchar_t *name, int id = -1);
 	String GetString(THHANDLE handle, const wchar_t *name, int id = -1);
 	
+	void (*SetDataInteger)(THHANDLE handle, LPCWSTR name, int index, int data, int *status);
+	void (*SetDataDouble)(THHANDLE handle, LPCWSTR name, int index, double data, int *status);
+	int (*SetDataString)(THHANDLE handle, LPCWSTR name, int index, LPCWSTR lpData, int *status);	
+	void SetInt(THHANDLE handle, const wchar_t *name, int val, int id = -1);
+	void SetDouble(THHANDLE handle, const wchar_t *name, double val, int id = -1);
+	void SetString(THHANDLE handle, const wchar_t *name, const String &val, int id = -1);
+		
 	template <class T>
 	void LoadDiffractionBodyHydrostatic(Hydro &hy, int sz, const OrcaFactors &factor, const Point3D &c0) {
 		Buffer<T> bodies(hy.dt.Nb);
@@ -1007,6 +1014,7 @@ private:
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 			hy.dt.msh[ib].dt.C.resize(6, 6);
 			hy.dt.msh[ib].dt.M.resize(6, 6);
+			
 			const T &b = bodies[ib];
 			
 			hy.dt.msh[ib].dt.Vo = b.Volume*factor.len*factor.len*factor.len;
@@ -1052,7 +1060,7 @@ private:
 			for (int i = 0; i < 4; ++i) {
 				const TVector &v0 = pan.Vertices[i];
 				
-				if (i == 3 && std::isnan<double>(v0[0]))
+				if (i == 3 && std::isnan(v0[0]))
 					p.id[i] = p.id[0];
 				else {
 					Point3D pnt(v0[0]*factor.len, v0[1]*factor.len, v0[2]*factor.len);

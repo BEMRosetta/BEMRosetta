@@ -8,6 +8,10 @@
 #include "libbemrosetta.h"
 #include <ScatterDraw/ScatterDraw.h>
 
+#define TFILE <BEMRosetta_cl/BEMRosetta_cl.t>
+#include <Core/t.h>
+
+
 String GetBuildInfo() {
 	String name, mode;
 	Time date;

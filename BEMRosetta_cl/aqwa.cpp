@@ -1496,7 +1496,7 @@ UVector<String> Aqwa::Check() const {
 String FastOut::Load_LIS(String file) {
 	FileInLine in(file);
 	if (!in.IsOpen())
-		return t_(F("Impossible to open '%s'", file));
+		return F(t_("Impossible to open '%s'"), file);
 	
 	fileName = file;
 	

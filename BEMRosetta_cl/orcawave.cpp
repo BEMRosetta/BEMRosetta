@@ -904,6 +904,8 @@ bool OrcaWave::Load_OF_YML() {
 
 void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, UVector<Point3D> &listPoints,
 								bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const {
+	String dampingLid;
+	double dampingFactor = 0.016;
 	bool createQTFFreeSurface = true;
 	bool onlyMeanDrift = qtfType > 10;
 	
@@ -996,6 +998,13 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		out << 	   "Potential formulation only";
 	out <<  "\n";
 	
+	out << 	"HasResonanceDampingLid: " << (dampingLid.IsEmpty() ? "No" : "Yes") << "\n"
+			"OutputPanelPressures: " << (withPotentials ? "Yes" : "No") << "\n"
+			//"OutputPanelVelocities: No\n"
+			"OutputBodyWireFrames: " << (withMesh ? "Yes" : "No") << "\n"
+			"OutputIntermediateResults: " << (withPotentials ? "Yes" : "No") << "\n"
+			"ComputationStrategy: Optimised for memory\n";			// Also "Optimised for run time"
+	
 	out << 	"LoadRAOCalculationMethod: Diffraction\n";
 	if (qtfType == 7 || qtfType == 9)
 		out << "QuadraticLoadPressureIntegration: " << (qtfType == 9 ? "Yes" : "No") << "\n";
@@ -1010,21 +1019,15 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		else if (qtfType == 9)
 			out << "PreferredQuadraticLoadCalculationMethod: Pressure integration\n";
 	}
-	out << 	"HasResonanceDampingLid: No\n"
-			"LengthTolerance: 100e-9\n"
+	out << 	"LengthTolerance: 100e-9\n"
 			"WaterlineZTolerance: 1e-6\n"
 			"WaterlineGapTolerance: 1e-6\n"
 			"DivideNonPlanarPanels: No\n"
 			"LinearSolverMethod: Direct LU\n"
-			"OutputPanelPressures: " << (withPotentials ? "Yes" : "No") << "\n"
-			//"OutputPanelVelocities: No\n"
-			"OutputBodyWireFrames: " << (withMesh ? "Yes" : "No") << "\n"
-			"OutputIntermediateResults: " << (withPotentials ? "Yes" : "No") << "\n"
 			"ValidatePanelArrangement: No\n"
 			"BodyVolumeWarningLevel: 1e-12\n"
 			"PanelAspectRatioWarningLevel: 25\n"
-			"PanelsPerWavelengthWarningLevel: 5\n"
-			"ComputationStrategy: Optimised for memory\n";			// Also "Optimised for run time"
+			"PanelsPerWavelengthWarningLevel: 5\n";
 	
 	out << 	"# Environment\n";
 	//if (isv15)
@@ -1052,6 +1055,9 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 				"QTFMaxPeriodOrFrequency: Infinity\n"
 				"QTFFrequencyTypes: Both\n";
 	
+	out <<  "# Constraints\n"
+			"EnableMultibodyConstraints: No\n";
+
 	out << 	"# Bodies\n"
 			"Bodies:\n";
 	for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -1128,7 +1134,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
     	out << 	"    BodyInertiaTensorOriginType: Body origin\n" //User specified\n"
     			//"    BodyInertiaTensorUserOrigin: [" << F("%f, %f, %f", 0, 0, 0) << "]\n" // d.c0.x, d.c0.y, d.c0.z) << "]\n"
     			"    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:\n";
-    	if (d.Cadd.size() == 36) {
+    	if (d.Cadd.size() == 36 && d.Cadd.maxCoeff() > EPS_LEN) {
     		for (int r = 0; r < 6; ++r) {
     			out << "      - [";
     			for (int c = 0; c < 6; ++c) {
@@ -1138,7 +1144,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
     			}
     			out << "]\n";
     		}
-		} else if (d.Cmoor.size() == 36) {
+		} else if (d.Cmoor.size() == 36 && d.Cmoor.maxCoeff() > EPS_LEN) {
     		for (int r = 0; r < 6; ++r) {
     			out << "      - [";
     			for (int c = 0; c < 6; ++c) {
@@ -1185,7 +1191,15 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 			out << F("- [%8.6g, %8.6g, %8.6g]\n", listPoints[i].x, listPoints[i].y, listPoints[i].z);
 	}
 	out <<	"DetectAndSkipFieldPointsInsideBodies: Yes\n";
-						
+	
+	if (!dampingLid.IsEmpty()) {
+		out << 	"# Damping lid\n"
+				"DampingLidMeshFileName: " << dampingLid << "\n"
+				"DampingLidMeshFormat: Wamit gdf\n"
+				"DampingLidMeshLengthUnits: m\n"
+				"DampingFactorEpsilon: " << dampingFactor << "\n";	
+	}
+	
 	if (!onlyMeanDrift && (qtfType == 7 || qtfType == 9)) {
 		out << 	"# QTFs\n"
 					"QTFCalculationMethod: Direct method\n";

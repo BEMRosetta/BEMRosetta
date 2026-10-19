@@ -367,44 +367,44 @@ public:
 	
 	const char *GetCodeStrAbr() const {
 		switch (dt.solver) {
-		case WAMIT: 		return t_("Wam");
-		case WAMIT_OUT:		return t_("Wm.o");
-		case WAMIT_1_3: 	return t_("Wm.1");
-		case WAMIT_1_3_RAD:	return t_("Wm.1");
-		case MATLAB:		return t_("Mat.mat");
-		case WADAM_WAMIT: 	return t_("WDM");
-		case FAST_WAMIT: 	return t_("FST");
-		case NEMOH:			return t_("Nmh");
-		case NEMOHv115:		return t_("Nmh115");
-		case NEMOHv3:		return t_("Nmh3");
-		case SEAFEM_NEMOH:	return t_("SFM");
-		case AQWA:			return t_("AQW");
-		case AQWA_QTF:		return t_("AQW.qtf");
-		case AQWA_DAT:		return t_("AQW.dat");
-		case FOAMM:			return t_("FMM");
-		case BEMROSETTA:	return t_("BMR");
-		case BEMROSETTA_H5: return t_("BMR.h5");
-		case DIODORE:		return t_("DIO");
-		case ORCAFLEX_YML:	return t_("ORCF.yml");
-		case ORCAWAVE_YML:	return t_("ORCW.yml");
-		case CSV_MAT:		return t_("CSVm");
-		case CSV_TABLE:		return t_("CSVt");
-		case BEMIO_H5:		return t_("BMh5");
-		case HAMS_WAMIT:	return t_("HAMS_W");
-		case HAMS:			return t_("HAMS");
-		case HAMS_MREL:		return t_("HAMS_M");
-		case CAPYTAINE:		return t_("Capy");
-		case CAPY_NC:		return t_("Capy.nc");
-		case CAPYTAINE_PY:	return t_("Capy.py");
-		case AKSELOS_NPZ:	return t_("Aks.npz");
-		case HYDROSTAR:		return t_("Hyd");
-		case DIFFRAC:		return t_("DIFF.xml");
-		case DIFFRAC_H5:	return t_("DIFF.h5m");
+		case WAMIT: 		return "Wam";
+		case WAMIT_OUT:		return "Wm.o";
+		case WAMIT_1_3: 	return "Wm.1";
+		case WAMIT_1_3_RAD:	return "Wm.1";
+		case MATLAB:		return "Mat.mat";
+		case WADAM_WAMIT: 	return "WDM";
+		case FAST_WAMIT: 	return "FST";
+		case NEMOH:			return "Nmh";
+		case NEMOHv115:		return "Nmh115";
+		case NEMOHv3:		return "Nmh3";
+		case SEAFEM_NEMOH:	return "SFM";
+		case AQWA:			return "AQW";
+		case AQWA_QTF:		return "AQW.qtf";
+		case AQWA_DAT:		return "AQW.dat";
+		case FOAMM:			return "FMM";
+		case BEMROSETTA:	return "BMR";
+		case BEMROSETTA_H5: return "BMR.h5";
+		case DIODORE:		return "DIO";
+		case ORCAFLEX_YML:	return "ORCF.yml";
+		case ORCAWAVE_YML:	return "ORCW.yml";
+		case CSV_MAT:		return "CSVm";
+		case CSV_TABLE:		return "CSVt";
+		case BEMIO_H5:		return "BMh5";
+		case HAMS_WAMIT:	return "HAMS_W";
+		case HAMS:			return "HAMS";
+		case HAMS_MREL:		return "HAMS_M";
+		case CAPYTAINE:		return "Capy";
+		case CAPY_NC:		return "Capy.nc";
+		case CAPYTAINE_PY:	return "Capy.py";
+		case AKSELOS_NPZ:	return "Aks.npz";
+		case HYDROSTAR:		return "Hyd";
+		case DIFFRAC:		return "DIFF.xml";
+		case DIFFRAC_H5:	return "DIFF.h5m";
 #ifdef PLATFORM_WIN32	
-		case ORCAWAVE_OWR: 	return t_("ORC.owr");
+		case ORCAWAVE_OWR: 	return "ORC.owr";
 #endif
-		case HYDROSTAR_OUT:		return t_("Hydr");
-		case UNKNOWN:		return t_("¿?");
+		case HYDROSTAR_OUT:		return "Hydr";
+		case UNKNOWN:		return "??";
 		case NUMBEM:		NEVER();
 		}
 		return t_("Unknown");
@@ -1954,6 +1954,9 @@ public:
 	String pythonEnv;
 	int guiScale;
 	String windowTitle;
+	
+	UVector<const char *> languages = {"en-US", "ca-ES", "de-DE", "es-ES", "eu-ES", "fr-FR", "pt-PT", "zh-CN"};
+	int language = LNGFromText("en-US");
 
 	int LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
 	Hydro &Join(UVector<int> &ids, Function <bool(String, int)> Status = Null);
@@ -2085,8 +2088,27 @@ public:
 			("opT", opT)
 			("hamsmrelPath", hamsmrelPath)
 			("opNoWind", opNoWind)
+			("language", language)
 		;
 		if (json.IsLoading()) {
+			int idLanguage;
+			if (!IsNum(language)) {
+				idLanguage = 0;
+				language = LNGFromText(languages[0]);
+			} else {
+				idLanguage = -1;
+				for (int i = 0; i < languages.size(); ++i)
+					if (LNGFromText(languages[i]) == language) {
+						idLanguage = i;
+						break;
+					}
+				if (idLanguage < 0) {
+					idLanguage = 0;
+					language = LNGFromText(languages[0]);
+				}
+			}
+			SetLanguage(SetLNGCharset(LNGFromText(languages[idLanguage]), CHARSET_UTF8));			
+
 			dofType = BasicBEM::DOFType(idofType);
 			headingType = BasicBEM::HeadingType(iheadingType);
 			if (IsEmpty(nemohPath))
@@ -2099,12 +2121,12 @@ public:
 					aqwaPath = defaultPath;
 			}
 			if (IsEmpty(wamitPath6s)) {
-				const char *defaultPath = "C:\\c:\\wamitv6s\\wamit.exe";
+				const char *defaultPath = "C:\\wamitv6s\\wamit.exe";
 				if (FileExists(defaultPath))
 					wamitPath6s = defaultPath;
 			}
 			if (IsEmpty(wamitPath7)) {
-				const char *defaultPath = "C:\\c:\\wamitv7\\wamit.exe";
+				const char *defaultPath = "C:\\wamitv7\\wamit.exe";
 				if (FileExists(defaultPath))
 					wamitPath7 = defaultPath;
 			}

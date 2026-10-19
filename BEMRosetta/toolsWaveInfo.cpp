@@ -8,6 +8,9 @@
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
 
+#define TFILE <BEMRosetta/BEMRosetta.t>
+#include <Core/t.h>
+
 #include <BEMRosetta_cl/BEMRosetta.h>
 #include <STEM4U/SeaWaves.h>
 

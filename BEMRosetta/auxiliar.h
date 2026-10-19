@@ -6,6 +6,9 @@
 #define LAYOUTFILE <BEMRosetta/auxiliar.lay>
 #include <CtrlCore/lay.h>
 
+#define TFILE <BEMRosetta/BEMRosetta.t>
+#include <Core/t.h>
+
 class RichTextView2 : public RichTextView {
 public:
 	RichTextView2() {
@@ -149,6 +152,15 @@ struct HeadConvert : Convert {
 			return String();
 		return FormatDoubleDecimals(ScanDouble(q.ToString()), 5);
 	}
+};
+
+// Helper to add Edits to GridCtrl
+class GridEditors {
+	UArray<Ctrl> ctrls; 
+public:
+	template <class T>
+	T& Add()    { return ctrls.Create<T>(); }
+	void Clear() { ctrls.Clear(); }
 };
 
 class SelectList : public WithSelectList<StaticRect> {

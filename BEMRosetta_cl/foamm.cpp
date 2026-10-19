@@ -12,8 +12,7 @@ String Foamm::Load(String file) {
 	dt.dimen = true;
 	dt.Nb = 1;
 	dt.msh.SetCount(1);
-	//dt.dof.SetCount(1);
-	//dt.dof[0] = 1;
+
 	dt.Nh = 1;
 	dt.head.SetCount(1);
 	dt.head[0] = 0;
@@ -27,12 +26,7 @@ String Foamm::Load(String file) {
 		if (IsNull(dt.Nb))
 			return t_("No data found");
 		
-		/*dt.dof.Clear();	dt.dof.SetCount(dt.Nb, 0);
-		for (int i = 0; i < dt.Nb; ++i)
-			dt.dof[i] = 1;*/
 	} catch (Exc e) {
-		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//dt.lastError = Format(t_("file %s "), file) + e;
 		return e;
 	}
 	

@@ -41,6 +41,7 @@ file
 	toolsWaveInfo.cpp,
 	main.tpp,
 	main.iml,
+	BEMRosetta.t,
 	clip.brc,
 	ajax-loader.gif,
 	auxiliar.lay,

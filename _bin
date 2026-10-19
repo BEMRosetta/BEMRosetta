@@ -94,6 +94,9 @@ class BEMRosetta:
         self.libc._BMR_Mesh_GetControlSurface.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int]
         self.libc._BMR_Mesh_GetControlSurface.restype = ctypes.c_int
 
+        self.libc._BMR_Mesh_GetControlSurfaceIds.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        self.libc._BMR_Mesh_GetControlSurfaceIds.restype = ctypes.c_int
+
         self.libc._BMR_Mesh_Volume_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
         self.libc._BMR_Mesh_Volume_Get.restype = ctypes.c_bool
 
@@ -437,6 +440,14 @@ class _Mesh:
 
     def GetControlSurface(self, distance, ratio, quads, bottom, top):
         _ret = self.libc._BMR_Mesh_GetControlSurface(distance, ratio, quads, bottom, top)
+        self._raise_if_error()
+        return _ret
+
+    def GetControlSurfaceIds(self, mids, distance, ratio, quads, bottom, top):
+        mids = np.asarray(mids, dtype=np.float64)
+        if mids.ndim != 1:
+            raise ValueError('Function expects a 1D array')
+        _ret = self.libc._BMR_Mesh_GetControlSurfaceIds(mids.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), mids.size, distance, ratio, quads, bottom, top)
         self._raise_if_error()
         return _ret
 

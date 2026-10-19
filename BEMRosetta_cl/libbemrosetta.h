@@ -119,10 +119,12 @@
 	L_EXPORT int _BMR_Mesh_GetWaterPlane() NOEXCEPT;
 	// Extract in new model the mesh underwater hull
 	L_EXPORT int _BMR_Mesh_GetHull() NOEXCEPT;
-	// Generates in new model the waterplane lid with mesh size ratio
+	// Generates in new mesh the waterplane lid with mesh size ratio
 	L_EXPORT int _BMR_Mesh_FillWaterplane(double ratio, int quads) NOEXCEPT;
-	// Generates in new model a control surface mesh at a distance and with a size ratio
+	// Generates in new mesh a control surface mesh at a distance and with a size ratio. Returns the new mesh id.
 	L_EXPORT int _BMR_Mesh_GetControlSurface(double distance, double ratio, int quads, int bottom, int top) NOEXCEPT;
+	// Generates in new meshes the non overlapping control surfaces at a distance and with a size ratio, considering a set of meshes. Returns the id of the first of the created meshes.
+	L_EXPORT int _BMR_Mesh_GetControlSurfaceIds(const double *mids, int dim, double distance, double ratio, int quads, int bottom, int top) NOEXCEPT;
 	// Returns an array with the volumes x, y and z
 	L_EXPORT bool _BMR_Mesh_Volume_Get(double *volx, double *voly, double *volz) NOEXCEPT;
 	// Returns an array with the underwater volumes x, y and z

@@ -99,10 +99,13 @@ Extract in new model the waterplane mesh (lid)&&]
 Extract in new model the mesh underwater hull&&]
 [A3*;l150;  [A2*@(150.150.255) int] [A1@(150.150.150) .Mesh.]FillWaterplane(double ratio`, int quads)&]
 [A3;l150; 
-Generates in new model the waterplane lid with mesh size ratio&&]
+Generates in new mesh the waterplane lid with mesh size ratio&&]
 [A3*;l150;  [A2*@(150.150.255) int] [A1@(150.150.150) .Mesh.]GetControlSurface(double distance`, double ratio`, int quads`, int bottom`, int top)&]
 [A3;l150; 
-Generates in new model a control surface mesh at a distance and with a size ratio&&]
+Generates in new mesh a control surface mesh at a distance and with a size ratio. Returns the new mesh id.&&]
+[A3*;l150;  [A2*@(150.150.255) int] [A1@(150.150.150) .Mesh.]GetControlSurfaceIds(const double `*mids`, int dim`, double distance`, double ratio`, int quads`, int bottom`, int top)&]
+[A3;l150; 
+Generates in new meshes the non overlapping control surfaces at a distance and with a size ratio, considering a set of meshes. Returns the id of the first of the created meshes.&&]
 [A3*;l150; [A1*@(150.150.150) .Mesh.]Volume&]
 [A3*;l300;  [A2*@(150.150.255) bool] [A1@(150.150.150) .Mesh.Volume.]Get(double `*volx`, double `*voly`, double `*volz)&]
 [A3;l300; 

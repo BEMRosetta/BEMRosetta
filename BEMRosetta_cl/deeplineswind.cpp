@@ -19,7 +19,7 @@ String FastOut::LoadDb(String file, Function <bool(String, int)> Status) {
 	Sqlite3Session sqlite3;
 
 	if(!sqlite3.Open(file)) 
-		return t_(F("Impossible to open '%s'", file));
+		return F(t_("Impossible to open '%s'"), file);
 
 	fileName = file;
 	
