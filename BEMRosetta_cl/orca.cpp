@@ -939,6 +939,37 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		}
 		if (hy.dt.msh[ib].dt.Dlin.maxCoeff() < EPS_LEN)
 			hy.dt.msh[ib].dt.Dlin = Eigen::MatrixXd();
+
+		Point3D meshPosition;
+		meshPosition.x = GetDouble(wave, L"BodyMeshPositionX", 1);
+		meshPosition.y = GetDouble(wave, L"BodyMeshPositionY", 1);
+		meshPosition.z = GetDouble(wave, L"BodyMeshPositionZ", 1);
+		Value3D meshRotation;
+		meshRotation.x = GetDouble(wave, L"BodyMeshHeel", 1);
+		meshRotation.y = GetDouble(wave, L"BodyMeshTrim", 1);
+		meshRotation.z = GetDouble(wave, L"BodyMeshHeading", 1);		
+				
+		hy.dt.msh[ib].dt.cg.x = GetDouble(wave, L"BodyCentreOfMassx");
+		hy.dt.msh[ib].dt.cg.y = GetDouble(wave, L"BodyCentreOfMassy");
+		hy.dt.msh[ib].dt.cg.z = GetDouble(wave, L"BodyCentreOfMassz");
+		hy.dt.msh[ib].dt.cg.Rotate(meshRotation, meshPosition, RotationOrder::ZYX);
+		hy.dt.msh[ib].dt.cg += meshPosition;
+
+		String origin = GetString(wave, L"BodyOriginType");
+		if (origin == "User specified") {	
+			hy.dt.msh[ib].dt.c0.x = GetDouble(wave, L"BodyUserOriginx");
+			hy.dt.msh[ib].dt.c0.y = GetDouble(wave, L"BodyUserOriginy");
+			hy.dt.msh[ib].dt.c0.z = GetDouble(wave, L"BodyUserOriginz");
+			hy.dt.msh[ib].dt.c0.Rotate(meshRotation, meshPosition, RotationOrder::ZYX);
+			hy.dt.msh[ib].dt.c0 += meshPosition;
+		} else if (origin == "Centre of mass")
+			hy.dt.msh[ib].dt.c0 = clone(hy.dt.msh[ib].dt.cg);
+		else if (origin == "Free surface") {
+			hy.dt.msh[ib].dt.c0.x = meshPosition.x;
+			hy.dt.msh[ib].dt.c0.y = meshPosition.y;
+			hy.dt.msh[ib].dt.c0.z = 0;
+		} else
+			throwError(F("Unknown BodyOriginType '%s'", origin));
 	}
 		
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) 

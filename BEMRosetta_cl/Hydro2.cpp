@@ -2322,44 +2322,22 @@ MatrixXd Hydro::C_mat(bool ndim, int ib) const {
 	return ret;
 }
 
-void Hydro::C_mat_Set(bool ndim, int ib, const MatrixXd &C) {
-	dt.msh[ib].dt.C.resize(6, 6);
+void Hydro::Cx_mat_Set(bool ndim, const MatrixXd &C, MatrixXd &ret) {
+	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) {
 			double factor;
 			if (dt.dimen)
-				factor = !ndim ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));
+				factor = !ndim ?   g_rho_dim()/g_rho_ndim()  :    g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));
 			else
-				factor = ndim ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));	
-			dt.msh[ib].dt.C(idf, jdf) = C(idf, jdf)*factor;
+				factor = ndim ? 1/(g_rho_dim()/g_rho_ndim()) : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));	
+			ret(idf, jdf) = C(idf, jdf)*factor;
 		}
 }
 
-void Hydro::Cmoor_mat_Set(bool ndim, int ib, const MatrixXd &C) {
-	dt.msh[ib].dt.Cmoor.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) {
-			double factor;
-			if (dt.dimen)
-				factor = !ndim ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));
-			else
-				factor = ndim ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));	
-			dt.msh[ib].dt.Cmoor(idf, jdf) = C(idf, jdf)*factor;
-		}
-}
-
-void Hydro::Cadd_mat_Set(bool ndim, int ib, const MatrixXd &C) {
-	dt.msh[ib].dt.Cadd.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) {
-			double factor;
-			if (dt.dimen)
-				factor = !ndim  ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));
-			else
-				factor = ndim ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));	
-			dt.msh[ib].dt.Cadd(idf, jdf) = C(idf, jdf)*factor;
-		}
-}
+void Hydro::C_mat_Set    (bool ndim, int ib, const MatrixXd &C) {Cx_mat_Set(ndim, C, dt.msh[ib].dt.C);}
+void Hydro::Cmoor_mat_Set(bool ndim, int ib, const MatrixXd &C) {Cx_mat_Set(ndim, C, dt.msh[ib].dt.Cmoor);}
+void Hydro::Cadd_mat_Set (bool ndim, int ib, const MatrixXd &C) {Cx_mat_Set(ndim, C, dt.msh[ib].dt.Cadd);}
 
 MatrixXd Hydro::Cmoor_mat(bool ndim, int ib) const {
 	MatrixXd ret;

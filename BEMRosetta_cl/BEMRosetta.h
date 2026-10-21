@@ -961,7 +961,6 @@ public:
 	void SaveC(FileOut &out) const;
 	void SaveM(FileOut &out) const;
 	
-public:
 	String LoadSerialization(String file);
 	void SaveSerialization(String file) const;
 	
@@ -1395,6 +1394,9 @@ protected:
 	static bool IsHAMS(String file, String &controlfile);
 	
 	void SwapForcesFreqOrder(Forces &F);
+	
+private:
+	void Cx_mat_Set(bool ndim, const MatrixXd &C, MatrixXd &ret);
 };
 
 
