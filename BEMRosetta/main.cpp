@@ -66,7 +66,7 @@ void Main::Init(bool firstTime) {
 		if (errorJson != t_("First time")) 
 			Exclamation(DeQtfLf(str + "\n" + t_("Please send the above file to the authors.\nCheck it beforehand in case protected data is included.")));
 		EM().Log(str);
-	}
+	} 
 
 	EM().Log("Configuration loaded");
 

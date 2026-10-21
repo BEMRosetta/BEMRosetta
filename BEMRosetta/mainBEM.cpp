@@ -88,9 +88,11 @@ void MainBEM::Init() {
 	menuProcess.butDampLin.Tip(t_("Get the linear damping matrix"));
 	menuProcess.critDamp.Disable();	
 	menuProcess.critDamp = 0.05;
+	
 	menuProcess.butRAO <<= THISBACK(OnRAO);
 	menuProcess.butDampLin <<= THISBACK(OnDampLin);
 	menuProcess.butSymmetrize <<= THISBACK(OnSymmetrize);
+	menuProcess.butEdit <<= THISBACK(OnEdit);
 	
 	menuProcess.butABForces << THISBACK(OnABForces);
 	menuProcess.butQTF << THISBACK(OnQTF);
@@ -977,6 +979,7 @@ void MainBEM::UpdateButtons() {
 	menuProcess.butA0.			Enable(numsel == 1 || numrow == 1);
 	menuProcess.butAinf.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butRAO.			Enable(numsel == 1 || numrow == 1);
+	menuProcess.butEdit.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butDampLin.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.critDamp.		Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butAinfw.		Enable(numsel == 1 || numrow == 1);
@@ -1284,6 +1287,59 @@ void MainBEM::OnBH(int num) {
 	}
 }
 
+MainMenuEdit::MainMenuEdit() {
+	InitGrid(Dlin, edDlin);
+	InitGrid(Dquad, edDquad);	
+	InitGrid(Cadd, edCadd);
+	InitGrid(Cmoor, edCmoor);
+}
+	
+void MainBEM::OnEdit() {
+	try {
+		int idx = GetIndexOneSelected();
+		if (idx < 0) 
+			return;
+
+		WithMenuEdit_Bodies<TopWindow> bodies;
+		CtrlLayout(bodies);
+		bodies.Sizeable().Zoomable();
+		
+		UArray<MainMenuEdit> bodiesEach;
+		
+		for (int ib = 0; ib < Bem().hydros[idx].dt.msh.size(); ++ib) {
+			MainMenuEdit &b = bodiesEach.Add();
+			CtrlLayout(b);
+			Body::Data &d = Bem().hydros[idx].dt.msh[ib].dt;
+			bodies.selector.Add(b.SizePos(), d.name);
+			MatrixXdToGridCtrl(b.Dlin,  d.Dlin, 6, 6, 0);
+			MatrixXdToGridCtrl(b.Dquad, d.Dquad, 6, 6, 0);
+			MatrixXdToGridCtrl(b.Cadd,  Bem().hydros[idx].Cadd_mat(false, ib), 6, 6, 0);
+			MatrixXdToGridCtrl(b.Cmoor, Bem().hydros[idx].Cmoor_mat(false, ib), 6, 6, 0);
+		}
+		bodies.selector.SetWidth(80);
+		bodies.selector.SetCursor(0);
+		
+		bool cancel = true;
+		bodies.ok		<< [&] {cancel = false;	bodies.Close();};
+		bodies.cancel	<< [&] {bodies.Close();}; 
+		bodies.Execute();
+		if (cancel) 
+			throw Exc(t_("Cancelled by user"));
+		
+		for (int ib = 0; ib < Bem().hydros[idx].dt.msh.size(); ++ib) {
+			Body::Data &d = Bem().hydros[idx].dt.msh[ib].dt;
+			MainMenuEdit &b = bodiesEach[ib];
+			d.Dlin = GridCtrlToMatrixXd(b.Dlin);
+			d.Dquad = GridCtrlToMatrixXd(b.Dquad);
+			Bem().hydros[idx].Cadd_mat_Set(false, ib, GridCtrlToMatrixXd(b.Cadd)); 
+			Bem().hydros[idx].Cmoor_mat_Set(false, ib, GridCtrlToMatrixXd(b.Cmoor)); 
+		}
+		AfterBEM();	
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+}
+	
 void MainBEM::OnRAO() {
 	try {
 		int idx = GetIndexOneSelected();
@@ -2283,28 +2339,28 @@ void MainBEM::AfterBEM() {
 	if (!sameSystem) 
 		errorMsg.SetLabel(t_("Some bodies global or body axis mismatch"));
 	
-	UVector<int> idxs = ArrayModel_IndexsHydro(listLoaded);
+	UVector<int> icases = ArrayModel_IndexsHydro(listLoaded);
 
 	Progress progress(t_("Processing loaded data..."), 18);
 	int pos = 0;
-	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, idxs, false));					progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMatrixK2)).Enable(mainMatrixK2.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);	
-	mainTab.GetItem(mainTab.Find(mainMatrixKAdd)).Enable(mainMatrixKAdd.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, idxs, false));			progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMatrixDquad)).Enable(mainMatrixDquad.Load(Bem().hydros, idxs, false));			progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(idxs));													progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(idxs));											progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(idxs));													progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(idxs));													progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(idxs, menuPlot.headMD.GetCursor()));					progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(idxs, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(idxs, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(idxs, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(idxs, menuPlot.head1st.GetCursor()));				progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, icases, ~menuPlot.showNdim));	progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, icases, false));					progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, icases, ~menuPlot.showNdim));	progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixK2)).Enable(mainMatrixK2.Load(Bem().hydros, icases, ~menuPlot.showNdim));	progress.SetPos(pos++);	
+	mainTab.GetItem(mainTab.Find(mainMatrixKAdd)).Enable(mainMatrixKAdd.Load(Bem().hydros, icases, ~menuPlot.showNdim));	progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, icases, false));			progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixDquad)).Enable(mainMatrixDquad.Load(Bem().hydros, icases, false));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(icases));												progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(icases));										progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(icases));												progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(icases));												progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(icases, menuPlot.headMD.GetCursor()));					progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(icases, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(icases, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(icases, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(icases, menuPlot.head1st.GetCursor()));				progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());													progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(/*data.IsLoadedB() && */idxs.size() > 0);					progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(icases.size() > 0);										progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainBody)).Enable(mainBody.Load());												progress.SetPos(pos++);
 	
 	bool isLoadedSS = false;
@@ -2784,15 +2840,16 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 	array.Set(row, 0, t_("A available"));		array.Set(row++, col, hy.IsLoadedA() 	  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("B available"));		array.Set(row++, col, hy.IsLoadedB() 	  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Hydro stiff available"));		array.Set(row++, col, hy.IsLoadedC() 	  ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Moor stiff available"));		array.Set(row++, col, hy.IsLoadedCMoor()? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Inertia available"));	array.Set(row++, col, hy.IsLoadedM() 	  ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Moor stiff available"));		array.Set(row++, col, hy.IsLoadedCmoor(-1)? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Addit stiff available"));		array.Set(row++, col, hy.IsLoadedCadd(-1) ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Inertia available"));	array.Set(row++, col, hy.IsLoadedM() 	? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Fex available"));		array.Set(row++, col, hy.IsLoadedFex()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Fsc available"));		array.Set(row++, col, hy.IsLoadedFsc()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Ffk available"));		array.Set(row++, col, hy.IsLoadedFfk()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("RAO available"));		array.Set(row++, col, hy.IsLoadedRAO()  ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Linear damping available"));		array.Set(row++, col, hy.IsLoadedDlin()   ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Quadratic damping available"));	array.Set(row++, col, hy.IsLoadedDquad()  ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Mean Drift available"));		array.Set(row++, col, hy.IsLoadedMD() 	? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Linear damping available"));		array.Set(row++, col, hy.IsLoadedDlin(-1)   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Quadratic damping available"));	array.Set(row++, col, hy.IsLoadedDquad(-1)  ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Mean Drift available"));			array.Set(row++, col, hy.IsLoadedMD() 	? t_("Yes") : t_("No"));
 	
 	array.Set(row, 0, t_("#bodies"));			array.Set(row++, col, hy.dt.Nb);
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) {

@@ -1634,7 +1634,7 @@ bool Wamit::Load_mmx(String fileName) {
 				for (int i = 0; i < dt.Nb; ++i)
 					dt.msh[i].dt.M = MatrixXd::Zero(6, 6);
 			}
-			if (!IsLoadedCMoor()) {
+			if (!IsLoadedCmoor()) {
 				for (int i = 0; i < dt.Nb; ++i)
 					dt.msh[i].dt.Cmoor = MatrixXd::Zero(6, 6);
 			}
@@ -3071,7 +3071,7 @@ void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, bool onlyMean
 		out << "0 % IDAMP\n";
 	
 	
-	if (IsLoadedCMoor() && !dt.msh[0].dt.Cmoor.isZero(1e-12)) {
+	if (IsLoadedCmoor() && !dt.msh[0].dt.Cmoor.isZero(1e-12)) {
 		out << "1 % ISTIF\n";
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			for (int r = 0; r < 6; ++r) {

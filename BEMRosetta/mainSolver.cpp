@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2026, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -29,16 +29,6 @@ struct HeadFreqConvert : Convert {
 		return FormatDoubleDecimals(ScanDouble(q.ToString()), 5);
 	}
 };
-
-void InitGrid(GridCtrl &grid, GridEditors &ed) {
-	grid.Reset();
-	grid.Absolute().Editing().Clipboard().Sorting(false).FixedPaste().MultiSelect().SelectRow(false);
-	for (int i = 0; i < 6; ++i)
-		grid.AddColumn(InitCaps(BEM::StrDOF(i))).Edit(ed.Add<EditDouble>()).SetConvert(Single<ConvertRound>());
-	for (int y = 0; y < 6; ++y)
-		for (int x = 0; x < 6; ++x)
-			grid.Set(y, x, 0.);
-}
 
 MainSolverBody::MainSolverBody() {
 	String meshFiles = Body::GetMeshExt(true);
@@ -179,12 +169,12 @@ void MainSolver::Init() {
 	CtrlScroll &bscroll = bodiesEachScroll.Add();
 	CtrlLayout(b);
 	
-	bodies.array.Add(bscroll.AddPane(b, true, true).SizePos(), "Body 1");
+	bodies.selector.Add(bscroll.AddPane(b, true, true).SizePos(), "Body 1");
 	b.name <<= "Body 1";
 	b.name.WhenAction = [&]() {
-		bodies.array.grid.Set(bodies.array.GetCursor(), 0, ~b.name);
+		bodies.selector.grid.Set(bodies.selector.GetCursor(), 0, ~b.name);
 	};
-	bodies.array.SetWidth(80);
+	bodies.selector.SetWidth(80);
 	
 	bodies.butAdd <<= THISBACK(arrayOnAdd);
 	bodies.butDuplicate <<= THISBACK(arrayOnDuplicate);
@@ -454,7 +444,7 @@ void MainSolver::Load(String file) {
 	gen.height.Enable(tmp_hy.dt.h > 0);
 	gen.height <<= (tmp_hy.dt.h > 0 ? tmp_hy.dt.h : Null);
 	
-	bodies.array.Clear();
+	bodies.selector.Clear();
 	bodiesEach.Clear();
 	bodiesEachScroll.Clear();
 	for (int ib = 0; ib < tmp_hy.dt.msh.size(); ++ib) {
@@ -462,7 +452,7 @@ void MainSolver::Load(String file) {
 		MainSolverBody &b = bodiesEach.Add();
 		CtrlScroll &bscroll = bodiesEachScroll.Add();
 		CtrlLayout(b);
-		bodies.array.Add(bscroll.AddPane(b, true, true).SizePos(), tmp_b.dt.name);
+		bodies.selector.Add(bscroll.AddPane(b, true, true).SizePos(), tmp_b.dt.name);
 		
 		b.name <<= tmp_b.dt.name;
 		b.name.WhenAction = THISBACK1(OnName, bodiesEach.size()-1);
@@ -505,7 +495,7 @@ void MainSolver::Load(String file) {
 		MatrixXdToGridCtrl(b.Cmoor, tmp_b.dt.Cmoor, 6, 6, 0);
 	}
 	
-	bodies.array.SetCursor(0);
+	bodies.selector.SetCursor(0);
 	save.dropSolver.WhenAction();
 		
 	if (!tmp_hy.dt.w.IsEmpty()) {
@@ -715,7 +705,7 @@ bool MainSolver::Key(dword key, int ) {
 }
 
 void MainSolver::arrayClear() {
-	bodies.array.Clear();
+	bodies.selector.Clear();
 	bodiesEach.Clear();
 }
 
@@ -724,21 +714,21 @@ void MainSolver::arrayOnAdd() {
 	CtrlScroll &bscroll = bodiesEachScroll.Add();
 	CtrlLayout(b);
 	String name = F("Body %d", bodiesEach.size());
-	bodies.array.Add(bscroll.AddPane(b, true, true).SizePos(), name);
+	bodies.selector.Add(bscroll.AddPane(b, true, true).SizePos(), name);
 	b.name <<= name;
 	b.name.WhenAction = THISBACK1(OnName, bodiesEach.size()-1);
 }
 
 void MainSolver::OnName(int id) {
-	bodies.array.grid.Set(bodies.array.GetCursor(), 0, ~bodiesEach[id].name);
+	bodies.selector.grid.Set(bodies.selector.GetCursor(), 0, ~bodiesEach[id].name);
 }
 
 void MainSolver::arrayOnDuplicate() {
-	if (bodies.array.size() == 0) {
+	if (bodies.selector.size() == 0) {
 		BEM::PrintError(t_("No body available to duplicate"));
 		return;
 	}
-	int id = bodies.array.GetCursor();
+	int id = bodies.selector.GetCursor();
 	if (id < 0) {
 		BEM::PrintError(t_("Please select body to duplicate"));
 		return;
@@ -770,33 +760,33 @@ void MainSolver::arrayOnDuplicate() {
 	last.mesh = clone(sel.mesh);
 	last.lid = clone(sel.lid);
 	
-	bodies.array.Add(bscroll.AddPane(last, true, true).SizePos(), ~sel.name);
+	bodies.selector.Add(bscroll.AddPane(last, true, true).SizePos(), ~sel.name);
 	
 	last.SetTexts();
 	
 	last.name.WhenAction = [&]() {
-		int id = bodies.array.GetCursor();
+		int id = bodies.selector.GetCursor();
 		if (id < 0)
 			return;
 		MainSolverBody &sel = bodiesEach[id];
-		bodies.array.grid.Set(bodies.array.GetCursor(), 0, ~sel.name);
+		bodies.selector.grid.Set(bodies.selector.GetCursor(), 0, ~sel.name);
 	};	
 }
 
 void MainSolver::arrayOnRemove() {
-	if (bodies.array.size() == 0) {
+	if (bodies.selector.size() == 0) {
 		BEM::PrintError(t_("No body available to remove"));
 		return;
 	}
-	int id = bodies.array.GetCursor();
+	int id = bodies.selector.GetCursor();
 	if (id < 0) {
 		BEM::PrintError(t_("Please select body to remove"));
 		return;
 	}
-	bodies.array.Remove(id);
+	bodies.selector.Remove(id);
 	bodiesEach.Remove(id);
 	bodiesEachScroll.Remove(id);
-	bodies.array.SetCursor(max(id, bodiesEach.size()-1));
+	bodies.selector.SetCursor(max(id, bodiesEach.size()-1));
 }
 
 bool MainSolver::OnSave() {
@@ -913,7 +903,7 @@ void MatrixXdToGridCtrl(GridCtrl &grid, const Eigen::MatrixXd &mat, int rows, in
 		for (int y = 0; y < rows; ++y)
 			grid.Set(y, x, val);
 	for (int x = 0; x < mat.cols(); ++x)
-		for (int y = 0; y < mat.cols(); ++y)
+		for (int y = 0; y < mat.rows(); ++y)
 			grid.Set(y, x, mat(y, x));
 }
 

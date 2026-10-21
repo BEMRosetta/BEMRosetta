@@ -2323,6 +2323,33 @@ MatrixXd Hydro::C_mat(bool ndim, int ib) const {
 }
 
 void Hydro::C_mat_Set(bool ndim, int ib, const MatrixXd &C) {
+	dt.msh[ib].dt.C.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) {
+			double factor;
+			if (dt.dimen)
+				factor = !ndim ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));
+			else
+				factor = ndim ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));	
+			dt.msh[ib].dt.C(idf, jdf) = C(idf, jdf)*factor;
+		}
+}
+
+void Hydro::Cmoor_mat_Set(bool ndim, int ib, const MatrixXd &C) {
+	dt.msh[ib].dt.Cmoor.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) {
+			double factor;
+			if (dt.dimen)
+				factor = !ndim ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));
+			else
+				factor = ndim ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));	
+			dt.msh[ib].dt.Cmoor(idf, jdf) = C(idf, jdf)*factor;
+		}
+}
+
+void Hydro::Cadd_mat_Set(bool ndim, int ib, const MatrixXd &C) {
+	dt.msh[ib].dt.Cadd.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) {
 			double factor;
@@ -2330,35 +2357,35 @@ void Hydro::C_mat_Set(bool ndim, int ib, const MatrixXd &C) {
 				factor = !ndim  ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));
 			else
 				factor = ndim ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));	
-			dt.msh[ib].dt.C(idf, jdf) = C(idf, jdf)*factor;
+			dt.msh[ib].dt.Cadd(idf, jdf) = C(idf, jdf)*factor;
 		}
 }
 
-MatrixXd Hydro::CMoor_mat(bool ndim, int ib) const {
+MatrixXd Hydro::Cmoor_mat(bool ndim, int ib) const {
 	MatrixXd ret;
-	if (dt.msh[ib].dt.Cmoor.size() == 0)
+	if (!IsLoadedCmoor(ib))
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = CMoor_(ndim, ib, idf, jdf);
+			ret(idf, jdf) = Cmoor_(ndim, ib, idf, jdf);
 	return ret;
 }
 
-MatrixXd Hydro::CAdd_mat(bool ndim, int ib) const {
+MatrixXd Hydro::Cadd_mat(bool ndim, int ib) const {
 	MatrixXd ret;
-	if (dt.msh[ib].dt.Cadd.size() == 0)
+	if (!IsLoadedCadd(ib))
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = CAdd_(ndim, ib, idf, jdf);
+			ret(idf, jdf) = Cadd_(ndim, ib, idf, jdf);
 	return ret;
 }
 
 MatrixXd Hydro::Dlin_dim_mat(int ib) const {
 	MatrixXd ret;
-	if (!IsLoadedDlin())
+	if (!IsLoadedDlin(ib))
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
@@ -2369,7 +2396,7 @@ MatrixXd Hydro::Dlin_dim_mat(int ib) const {
 
 MatrixXd Hydro::Dquad_dim_mat(int ib) const {
 	MatrixXd ret;
-	if (!IsLoadedDquad())
+	if (!IsLoadedDquad(ib))
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	

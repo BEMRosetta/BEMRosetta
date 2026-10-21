@@ -86,15 +86,15 @@ void HydroStar::Save_MCN(String fileName) const {
 	
 	out << "#RAIDEUR D'ANCRAGE + FREE SURFACE\n";
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		if (IsLoadedCMoor(ib) || IsLoadedCAdd(ib)) {
+		if (IsLoadedCmoor(ib) || IsLoadedCadd(ib)) {
 			out << F("STIFFNESS_MATRIX TYPE 0 BODY %d %d\n", ib+1, ib+1);
 			for (int idof = 0; idof < 6; ++idof)
 				for (int jdof = 0; jdof < 6; ++jdof) {
 					double d = 0;
-					if (IsLoadedCMoor(ib, idof, jdof))
-						d += CMoor_dim(ib, idof, jdof);
-					if (IsLoadedCAdd(ib, idof, jdof))
-						d += CAdd_dim(ib, idof, jdof);
+					if (IsLoadedCmoor(ib, idof, jdof))
+						d += Cmoor_dim(ib, idof, jdof);
+					if (IsLoadedCadd(ib, idof, jdof))
+						d += Cadd_dim(ib, idof, jdof);
 					out << F("%d %d %.3E\n", idof+1, jdof+1, d);
 				}
 			out << "ENDSTIFFNESS_MATRIX\n";

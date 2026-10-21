@@ -45,6 +45,7 @@ file
 	clip.brc,
 	ajax-loader.gif,
 	auxiliar.lay,
+	auxiliar.cpp,
 	auxiliar.h,
 	resource.h,
 	FAST readonly separator,

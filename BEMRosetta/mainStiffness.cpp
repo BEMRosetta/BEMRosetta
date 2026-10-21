@@ -67,10 +67,11 @@ void MainMatrixKA::Clear() {
 
 void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, String bodyName, int ibody, int idc, int ncol) {
 	row0 = ibody*9 + 1;
-	int realicase = 0;
+	/*int realicase = 0;
 	for (int i = 0; i < icase; ++i) 
 		realicase += int(data[realicase].cols())/6;
-	col0 = realicase*7 + icase;
+	col0 = realicase*7 + icase;*/
+	col0 = icase*8;
 	
 	row0s << row0;
 	col0s << col0;
@@ -79,7 +80,7 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 	array.Set(2, col0, AttrText(" ").Paper(GetColorId(idc)));
 	
 	int len = StdFont().Bold().GetAveWidth()*(BEM::StrDOF_len() + 2);
-	int ncols = int(data[icase].cols());
+	int ncols = 6;//int(data[icase].cols());
 	int Nb = int(ncols/6);
 	while (array.GetColumnCount() < col0 + 1 + ncols) {
 		if (icase > 0) {
@@ -136,9 +137,13 @@ void MainMatrixKA::PrintData() {
 	for (int i = 0; i < data.size(); ++i) {
 		int row0 = row0s[i];
 		int col0 = col0s[i];
-		if (data[i].size() != 0) {
+		if (data[i].size() == 0) {
+			for (int r = 0; r < 6; ++r)
+				for (int c = 0; c < 6; ++c)
+					array.Set(row0 + r + 2, col0 + c + 1 + int(c/6), "");
+		} else {
 			double mx = MaxIsNum(data[i].data(), int(data[i].size()));
-			if (IsNum(mx)) {
+			if (IsNum(mx) && mx > 0) {
 				for (int r = 0; r < data[i].rows(); ++r) {
 					for (int c = 0; c < data[i].cols(); ++c) {
 						String sdata;
@@ -170,6 +175,10 @@ void MainMatrixKA::PrintData() {
 						array.Set(row0 + r + 2, col0 + c + 1 + int(c/6), AttrText(sdata).Align(ALIGN_RIGHT));
 					}
 				}
+			} else {
+				for (int r = 0; r < 6; ++r)
+					for (int c = 0; c < 6; ++c)
+						array.Set(row0 + r + 2, col0 + c + 1 + int(c/6), "");
 			}
 		}
 	}
@@ -297,15 +306,15 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 		else
 			data << hy.C_mat(Ndim, ib);
 	} else if (what == Hydro::MAT_KMOOR) {
-		if (!hy.IsLoadedCMoor())
+		if (!hy.IsLoadedCmoor(ib))
 			data << EigenNull;
 		else
-			data << hy.CMoor_mat(Ndim, ib);
+			data << hy.Cmoor_mat(Ndim, ib);
 	} else if (what == Hydro::MAT_KADD) {
-		if (!hy.IsLoadedCAdd())
+		if (!hy.IsLoadedCadd(ib))
 			data << EigenNull;
 		else
-			data << hy.CAdd_mat(Ndim, ib);
+			data << hy.Cadd_mat(Ndim, ib);
 	} else if (what == Hydro::MAT_A) {
 		if (!hy.IsLoadedAinf())
 			data << EigenNull;
@@ -328,12 +337,12 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 		else
 			data << hy.dt.msh[ib].dt.M;
 	} else if (what == Hydro::MAT_DAMP_LIN) {
-		if (!hy.IsLoadedDlin())
+		if (!hy.IsLoadedDlin(ib))
 			data << EigenNull;
 		else
 			data << hy.Dlin_dim_mat(ib);
 	} else if (what == Hydro::MAT_DAMP_QUAD) {
-		if (!hy.IsLoadedDquad())
+		if (!hy.IsLoadedDquad(ib))
 			data << EigenNull;
 		else
 			data << hy.Dquad_dim_mat(ib);
@@ -349,19 +358,19 @@ bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &idxs, bool nd
 	Ndim = ndim;
 	
 	bool loaded = false; 	
-	for (int i = 0; i < idxs.size(); ++i) {
-		int isurf = idxs[i];
-		Hydro &hy = hydros[isurf];
+	for (int icase = 0; icase < idxs.size(); ++icase) {	// For all the BEM cases loaded
+		int idx = idxs[icase];
+		Hydro &hy = hydros[idx];
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) 
-			Add(hy.dt.name, i, hy.dt.msh[ib].dt.name, ib, hy, hy.dt.GetId());
-		if (data.size() > i && data[i].size() > 0 && IsNum(data[i](0)))
-			loaded = true;
-		/*for (int i = 0; i < data.size(); ++i) { 
-			if (data[i].size() > 0) {
-				loaded = true;
-				break;
+			Add(hy.dt.name, icase, hy.dt.msh[ib].dt.name, ib, hy, hy.dt.GetId());
+		if (data.size() > icase) {
+			for (const Eigen::MatrixXd &d : data) { 	// For all bodies in case
+				if (d.size() > 0 && IsNum(d(0))) {
+					loaded = true;
+					break;
+				}
 			}
-		}*/
+		}
 	}
 	if (!loaded)	
 		return false;

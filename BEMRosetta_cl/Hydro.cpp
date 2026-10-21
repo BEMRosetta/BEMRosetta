@@ -939,10 +939,10 @@ void Hydro::GetRAO(double critDamp) {
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		MatrixXd C = C_mat(false, ib);
-		MatrixXd C_moor = CMoor_mat(false, ib);
+		MatrixXd C_moor = Cmoor_mat(false, ib);
 		if (C_moor.size() == 36)
 			C += C_moor;
-		MatrixXd C_add = CAdd_mat(false, ib);
+		MatrixXd C_add = Cadd_mat(false, ib);
 		if (C_add.size() == 36)
 			C += C_add;
 		const MatrixXd &M_ = dt.msh[ib].dt.M;
@@ -987,8 +987,8 @@ void Hydro::GetDampLin(double critDamp) {
 
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		MatrixXd Cstiff = C_mat(false, ib);
-		MatrixXd Cmoor = CMoor_mat(false, ib);
-		MatrixXd Cadd = CAdd_mat(false, ib);
+		MatrixXd Cmoor = Cmoor_mat(false, ib);
+		MatrixXd Cadd = Cadd_mat(false, ib);
 		MatrixXd C = Eigen::MatrixXd::Zero(6, 6);
 		if (Cstiff.size() == 36)
 			C += Cstiff;

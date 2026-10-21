@@ -1065,6 +1065,17 @@ private:
 	GridEditors edM, edDlin, edDquad, edCadd, edCmoor;
 };
 
+class MainMenuEdit : public WithMenuEdit<StaticRect> {
+public:
+	typedef MainMenuEdit CLASSNAME;
+	
+	MainMenuEdit();
+
+private:
+	GridEditors edDlin, edDquad, edCadd, edCmoor;
+};
+
+
 class MainSolver : public WithMainSolver<StaticRect> {
 public:
 	typedef MainSolver CLASSNAME;
@@ -1739,11 +1750,11 @@ public:
 	void OnQTFZero();
 	void OnQTF_MD();
 	void OnMixWizard();
+	void OnEdit();
 	
 	void AfterBEM();
 		
 	int GetIndexOneSelected(bool complain = true);
-	//UVector<int> GetIdsSelected(bool complain);
 		
 	void Jsonize(JsonIO &json);
 		
@@ -1915,5 +1926,6 @@ void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, S
 Main &Ma(Main *m = 0);
 void Status(String str = String(), int time = 6000);
 
+void InitGrid(GridCtrl &grid, GridEditors &ed);
 	
 #endif

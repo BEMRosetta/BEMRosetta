@@ -330,7 +330,7 @@ void Hydro::SaveDiodoreHDB(String file) const {
 		out << "[Stiffness_matrix_of_the_mooring_system]\n";		
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
-				double d = IsLoadedCMoor() ? CMoor_dim(ib, r, c) : 0;
+				double d = IsLoadedCmoor() ? Cmoor_dim(ib, r, c) : 0;
 				out << F("% .7E ", d);
 			}
 			out << "\n";

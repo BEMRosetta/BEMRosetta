@@ -637,12 +637,6 @@ public:
 	inline double Kirf_toDimFactor (int idf) const 	  			  {return dt.dimen  ? g_rho_dim()/g_rho_ndim()  : g_rho_dim()*pow(dt.len, GetK_F(idf));}
 	inline double Kirf_toNDimFactor(int idf) const 	  			  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	
-	inline double CMoor_toDimFactor (int idf, int jdf) const 	  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
-	inline double CMoor_toNDimFactor(int idf, int jdf) const 	  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
-	
-	inline double CAdd_toDimFactor (int idf, int jdf) const 	  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
-	inline double CAdd_toNDimFactor(int idf, int jdf) const 	  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
-	
 	inline double F_toDimFactor(int idf)  const 				  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_F(idf));}
 	inline double F_toNDimFactor(int idf) const 				  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	inline double F_fromDimFactor(int idf)const 				  {return dt.dimen  ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
@@ -702,17 +696,19 @@ public:
 	inline double C_ndim(int ib, int idf, int jdf)  	const {return dt.msh[ib].dt.C(idf, jdf)*C_toNDimFactor(idf, jdf);}
 	inline double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
-	inline double CMoor_dim(int ib, int idf, int jdf)   const {return dt.msh[ib].dt.Cmoor(idf, jdf)*CMoor_toDimFactor(idf, jdf);}
-	MatrixXd CMoor_mat(bool ndim, int ib) 			   	const;
-	void CMoor_dim();	
-	inline double CMoor_ndim(int ib, int idf, int jdf)  const {return dt.msh[ib].dt.Cmoor(idf, jdf)*CMoor_toNDimFactor(idf, jdf);}
-	inline double CMoor_(bool ndim, int ib, int idf, int jdf)const {return ndim ? CMoor_ndim(ib, idf, jdf) : CMoor_dim(ib, idf, jdf);}
+	inline double Cmoor_dim(int ib, int idf, int jdf)   const {return dt.msh[ib].dt.Cmoor(idf, jdf)*C_toDimFactor(idf, jdf);}
+	MatrixXd Cmoor_mat(bool ndim, int ib) 			   	const;
+	void Cmoor_mat_Set(bool ndim, int ib, const MatrixXd &C);
+	void Cmoor_dim();	
+	inline double Cmoor_ndim(int ib, int idf, int jdf)  const {return dt.msh[ib].dt.Cmoor(idf, jdf)*C_toNDimFactor(idf, jdf);}
+	inline double Cmoor_(bool ndim, int ib, int idf, int jdf)const {return ndim ? Cmoor_ndim(ib, idf, jdf) : Cmoor_dim(ib, idf, jdf);}
 
-	inline double CAdd_dim(int ib, int idf, int jdf)   const {return dt.msh[ib].dt.Cadd(idf, jdf)*CAdd_toDimFactor(idf, jdf);}
-	MatrixXd CAdd_mat(bool ndim, int ib) 			   	const;
-	void CAdd_dim(bool ndim, int ib) const;
-	inline double CAdd_ndim(int ib, int idf, int jdf)  const {return dt.msh[ib].dt.Cadd(idf, jdf)*CAdd_toNDimFactor(idf, jdf);}
-	inline double CAdd_(bool ndim, int ib, int idf, int jdf)const {return ndim ? CAdd_ndim(ib, idf, jdf) : CAdd_dim(ib, idf, jdf);}
+	inline double Cadd_dim(int ib, int idf, int jdf)   const {return dt.msh[ib].dt.Cadd(idf, jdf)*C_toDimFactor(idf, jdf);}
+	MatrixXd Cadd_mat(bool ndim, int ib) 			   	const;
+	void Cadd_mat_Set(bool ndim, int ib, const MatrixXd &C);
+	void Cadd_dim(bool ndim, int ib) const;
+	inline double Cadd_ndim(int ib, int idf, int jdf)  const {return dt.msh[ib].dt.Cadd(idf, jdf)*C_toNDimFactor(idf, jdf);}
+	inline double Cadd_(bool ndim, int ib, int idf, int jdf)const {return ndim ? Cadd_ndim(ib, idf, jdf) : Cadd_dim(ib, idf, jdf);}
 	
 	// MD
 	
@@ -1004,26 +1000,70 @@ public:
 	bool IsLoadedA_P   (int i = 0, int j = 0)const {return dt.A_P.size() > i && dt.A_P[i].size() > j && dt.A_P[i][j].size() > 0 && IsNum(dt.A_P[i][j][0]);}
 	bool IsLoadedAinf  (int i = 0, int j = 0)const {return dt.Ainf.rows() > i && dt.Ainf.cols() > j && IsNum(dt.Ainf(i, j));}
 	bool IsLoadedA0	   (int i = 0, int j = 0)const {return dt.A0.rows() > i && dt.A0.cols() > j && IsNum(dt.A0(i, j));}
-	bool IsLoadedDlin(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.Nb > ib && dt.msh[ib].dt.Dlin.size() > 0 && dt.msh[ib].dt.Dlin.rows() > idf && dt.msh[ib].dt.Dlin.cols() > jdf && IsNum(dt.msh[ib].dt.Dlin(idf, jdf));}
-	bool IsLoadedDquad(int ib = 0, int idf = 0, int jdf = 0)const {return dt.Nb > ib && dt.msh[ib].dt.Dquad.size() > 0 && dt.msh[ib].dt.Dquad.rows() > idf && dt.msh[ib].dt.Dquad.cols() > jdf && IsNum(dt.msh[ib].dt.Dquad(idf, jdf));}
+	bool IsLoadedDlin(int ib = 0, int idf = 0, int jdf = 0)	const {
+		if (dt.Nb <= ib)
+			return false;
+		if (ib < 0) {
+			for (ib = 0; ib < dt.Nb; ++ib) {
+				if (IsLoadedDlin(ib, idf, jdf))
+					return true;
+			}
+			return false;
+		} else
+			return dt.msh[ib].dt.Dlin.size() > 0 && dt.msh[ib].dt.Dlin.rows() > idf && dt.msh[ib].dt.Dlin.cols() > jdf && IsNum(dt.msh[ib].dt.Dlin(idf, jdf));
+	}	
+	bool IsLoadedDquad(int ib = 0, int idf = 0, int jdf = 0)	const {
+		if (dt.Nb <= ib)
+			return false;
+		if (ib < 0) {
+			for (ib = 0; ib < dt.Nb; ++ib) {
+				if (IsLoadedDquad(ib, idf, jdf))
+					return true;
+			}
+			return false;
+		} else
+			return dt.msh[ib].dt.Dquad.size() > 0 && dt.msh[ib].dt.Dquad.rows() > idf && dt.msh[ib].dt.Dquad.cols() > jdf && IsNum(dt.msh[ib].dt.Dquad(idf, jdf));
+	}
 	bool IsLoadedB	   (int i = 0, int j = 0)const {return dt.B.size() > i && dt.B[i].size() > j && dt.B[i][j].size() > 0 && IsNum(dt.B[i][j][0]);}
 	bool IsLoadedB_H   (int i = 0, int j = 0)const {return dt.B_H.size() > i && dt.B_H[i].size() > j && dt.B_H[i][j].size() > 0 && IsNum(dt.B_H[i][j][0]);}
 	bool IsLoadedB_P   (int i = 0, int j = 0)const {return dt.B_P.size() > i && dt.B_P[i].size() > j && dt.B_P[i][j].size() > 0 && IsNum(dt.B_P[i][j][0]);}
 	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.Nb > ib && dt.msh[ib].dt.C.size() > 0 && dt.msh[ib].dt.C.rows() > idf && dt.msh[ib].dt.C.cols() > jdf && IsNum(dt.msh[ib].dt.C(idf, jdf));}
 	bool IsLoadedAnyC() const {
 		for (int ib = 0; ib < dt.Nb; ++ib)
-			if (dt.msh[ib].dt.C.size() < 36)
-				return false;
-		return true;
+			if (dt.msh[ib].dt.C.size() >= 36)
+				return true;
+		return false;
 	}
-	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return dt.Nb > ib && dt.msh[ib].dt.Cmoor.size() > 0 && dt.msh[ib].dt.Cmoor.rows() > idf && dt.msh[ib].dt.Cmoor.cols() > jdf && IsNum(dt.msh[ib].dt.Cmoor(idf, jdf));}
-	bool IsLoadedCAdd(int ib = 0, int idf = 0, int jdf = 0) const {return dt.Nb > ib && dt.msh[ib].dt.Cadd.size() > 0 && dt.msh[ib].dt.Cadd.rows() > idf && dt.msh[ib].dt.Cadd.cols() > jdf && IsNum(dt.msh[ib].dt.Cadd(idf, jdf));}
+	bool IsLoadedCmoor(int ib = 0, int idf = 0, int jdf = 0) const {
+		if (dt.Nb <= ib)
+			return false;
+		if (ib < 0) {
+			for (ib = 0; ib < dt.Nb; ++ib) {
+				if (IsLoadedCmoor(ib, idf, jdf))
+					return true;
+			}
+			return false;
+		} else
+			return dt.msh[ib].dt.Cmoor.size() > 0 && dt.msh[ib].dt.Cmoor.rows() > idf && dt.msh[ib].dt.Cmoor.cols() > jdf && IsNum(dt.msh[ib].dt.Cmoor(idf, jdf));
+	}
+	bool IsLoadedCadd(int ib = 0, int idf = 0, int jdf = 0) const {
+		if (dt.Nb <= ib)
+			return false;
+		if (ib < 0) {
+			for (ib = 0; ib < dt.Nb; ++ib) {
+				if (IsLoadedCadd(ib, idf, jdf))
+					return true;
+			}
+			return false;
+		} else
+			return dt.msh[ib].dt.Cadd.size() > 0 && dt.msh[ib].dt.Cadd.rows() > idf && dt.msh[ib].dt.Cadd.cols() > jdf && IsNum(dt.msh[ib].dt.Cadd(idf, jdf));
+	}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.Nb > ib && dt.msh[ib].dt.M.size() > 0 && dt.msh[ib].dt.M.rows() > idf && dt.msh[ib].dt.M.cols() > jdf && IsNum(dt.msh[ib].dt.M(idf, jdf));}
 	bool IsLoadedAnyM() const {
 		for (int ib = 0; ib < dt.Nb; ++ib)
-			if (dt.msh[ib].dt.M.size() < 36)
-				return false;
-		return true;
+			if (dt.msh[ib].dt.M.size() >= 36)
+				return true;
+		return false;
 	}
 	bool IsLoadedFex(int idf = 0, int ih = 0, int ib = 0) const 		{return IsLoadedForce(dt.ex, idf, ih, ib);}
 	bool IsLoadedFsc(int idf = 0, int ih = 0, int ib = 0) const 		{return IsLoadedForce(dt.sc, idf, ih, ib);}
@@ -1955,7 +1995,7 @@ public:
 	int guiScale;
 	String windowTitle;
 	
-	UVector<const char *> languages = {"en-US", "ca-ES", "de-DE", "es-ES", "eu-ES", "fr-FR", "pt-PT", "zh-CN"};
+	UVector<const char *> languages = {"en-US", "ca-ES", "de-DE", "es-ES", "eu-ES", "fr-FR", "ga-IE", "pt-PT", "zh-CN"};
 	int language = LNGFromText("en-US");
 
 	int LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
