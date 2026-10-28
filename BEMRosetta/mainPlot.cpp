@@ -135,8 +135,8 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 	case Hydro::DATA_RAO:	title = F(t_("Response Amplitude Operator %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
 						title2 = title + " " + smp_down;
 						title  = title + " " + smp_up;
-						labelY  = t_("RAO force") + F(" ") + smp_up;		
-						labelY2 = t_("RAO force") + F(" ") + smp_down;
+						labelY  = t_("RAO") + F(" ") + smp_up;		
+						labelY2 = t_("RAO") + F(" ") + smp_down;
 						splitter.SetPos(5000, 0);							
 						break;
 	case Hydro::DATA_STS:	title = F(t_("Magnitude Kr(ω) = B(ω)+jω{A(ω)-A∞} %s"), BEM::StrBDOFFull(plot_idf, plot_jdf));		

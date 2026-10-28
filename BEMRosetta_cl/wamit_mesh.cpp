@@ -110,7 +110,7 @@ String WamitBody::Load_ggdf(LineParser &f, String folder, UArray<Body> &mesh, bo
 			f.GetLine();
 			String fileName = f.GetText(0);
 			if (!FileExists(fileName)) {
-				fileName = AFX(folder, fileName);
+				fileName = folder / fileName;
 				if (!FileExists(fileName))
 					return F(t_("File '%s' does not exist"), f.GetText(0));
 			}

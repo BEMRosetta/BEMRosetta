@@ -411,7 +411,7 @@ bool Orca::InitVersion(String version) {
 		if (orcadata[i].path.IsEmpty()) {		// Path reconstructed
 			String pth = orcadata[i].name;
 			pth.Replace("OrcaFlex", "");
-			pth = AFX(GetProgramsFolderX86(), "Orcina", "OrcaFlex", Trim(pth));
+			pth = GetProgramsFolderX86() / "Orcina" / "OrcaFlex" / Trim(pth);
 			if (!DirectoryExists(pth))
 				orcadata.Remove(i);
 			orcadata[i].path = pth;
@@ -485,7 +485,7 @@ bool Orca::InitVersion(String version) {
 #else
 	arch = "Win32";
 #endif
-	String path = AFX(orcadata[iversion].path, "OrcFxAPI", arch, "OrcFxAPI.dll");	// Assembles the path
+	String path = orcadata[iversion].path / "OrcFxAPI" / arch / "OrcFxAPI.dll";	// Assembles the path
 	
 	return InitDll(path);
 }

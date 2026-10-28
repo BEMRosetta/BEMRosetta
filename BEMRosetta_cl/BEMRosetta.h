@@ -358,7 +358,7 @@ public:
 	Hydro& operator=(const Hydro &hyd) 	{Copy(hyd); return *this;};
 	Hydro(const Hydro &hyd) 			{Copy(hyd);}
 	Hydro(const Hydro &hyd, int) 		{Copy(hyd);}
-	void SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null, int ib = -1, double heading = Null);
+	void SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null, int ib = -1, double heading = Null, bool symmetrize = false) const;
 	void Report() const;
 	Hydro() {}
 	virtual ~Hydro() noexcept {}	
@@ -876,7 +876,10 @@ public:
 	    				
 	    UVector<double> w;		 				// [Nf]             Wave frequencies
 	    		
-	   	UArray<Body> msh, lids, css;				// [Nb]
+	   	UArray<Body> msh, lids, css;			// [Nb]
+	   	
+	   	Body standinglid;						// Standing waves lid
+	   	double epsilon = Null, gap = Null;		// Standing waves damping parameters
 	   	
 	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_rad;		// [Nb][Np][6][Nf]	Radiation complex potentials
 	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_dif;		// [Nb][Np][Nh][Nf]	Diffraction complex potentials
@@ -2058,7 +2061,7 @@ public:
 	String LoadSerializeJson();
 	bool StoreSerializeJson();
 	bool ClearTempFiles();
-	static String GetTempFilesFolder() {return AFX(GetAppDataFolder(), "BEMRosetta", "Temp");}
+	static String GetTempFilesFolder() {return GetAppDataFolder() / "BEMRosetta" / "Temp";}
 	
 	void UpdateHeadAll();
 	void UpdateHeadAllMD();

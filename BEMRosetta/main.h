@@ -1075,10 +1075,26 @@ private:
 	GridEditors edDlin, edDquad, edCadd, edCmoor;
 };
 
+class MainSolver_Save : public WithMainSolver_Save<StaticRect> {
+public:
+	typedef MainSolver_Save CLASSNAME;
+	
+	void Init();
+	
+	Body lidMesh;
+	int dropSolverVal = 0;
+	
+	void SetTexts();
+	
+private:
+	EditDouble edAdditionalX, edAdditionalY, edAdditionalZ, edAreaX, edAreaY;
+};
 
 class MainSolver : public WithMainSolver<StaticRect> {
 public:
 	typedef MainSolver CLASSNAME;
+	
+	friend MainSolver_Save;
 
 	void Init();
 	void InitAfterSerialize(bool ret);
@@ -1098,7 +1114,7 @@ public:
 	WithMainSolver_Bodies<StaticRect> bodies;
 	UArray<MainSolverBody> bodiesEach;
 	UArray<CtrlScroll> bodiesEachScroll;
-	WithMainSolver_Save<StaticRect> save;
+	MainSolver_Save save;
 	
 private:
 	bool OnLoad();
@@ -1115,15 +1131,12 @@ private:
 	void LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat);
 	
 	EditDouble editF, editH;
-	int dropSolverVal = 0;
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
 	void LoadDragDrop();
 	TimeCallback timerDrop;
 	UVector<String> filesToDrop;
-	
-	EditDouble edAdditionalX, edAdditionalY, edAdditionalZ, edAreaX, edAreaY;
 };
 
 class ArrayFields {

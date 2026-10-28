@@ -121,6 +121,146 @@ MainSolverBody::MainSolverBody() {
 	};
 }
 
+void MainSolver_Save::Init() {
+	saveTo.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
+	butSave.WhenAction = [&] {
+		MainSolver &main = GetParentCtrl<MainSolver>(this);
+		main.OnSave();
+	};
+	withPotentials.WhenAction = [&] {
+		if (withPotentials && int(~dropSolver) == Hydro::CAPYTAINE_PY)
+			withMesh <<= true;
+	;};
+	opSplit.WhenAction   = [&] {numSplit.Enable(opSplit);};
+	opThreads.WhenAction = [&] {numThreads.Enable(!opThreads);};
+	
+	arrayDOF.Reset();
+	arrayDOF.AddColumn(t_("DOF"));
+	arrayDOF.AddColumn(t_("Enabled")).With( 
+		[](One<Ctrl>& x) {
+			x.Create<Option>().NoWantFocus();
+		}
+	);
+	
+	for (int i = 0; i < 6; ++i)
+		arrayDOF.Add(InitCaps(BEM::StrDOF(i)), true);
+	
+	if (arrayAdditional.GetColumnCount() != 3) {
+		arrayAdditional.Appending().Removing().Editing().Sorting(true).MultiSelect().Clipboard().ExtraPaste().SelectRow(false).Duplicating().SetToolBar();
+		arrayAdditional.AddColumn(t_("x")).Edit(edAdditionalX);
+		arrayAdditional.AddColumn(t_("y")).Edit(edAdditionalY);
+		arrayAdditional.AddColumn(t_("z")).Edit(edAdditionalZ);
+	}
+	if (arrayArea.GetColumnCount() != 3) {
+		arrayArea.Editing().MultiSelect().Clipboard().Sorting(false).ExtraPaste().SelectRow(false);
+		arrayArea.AddColumn(t_("Data"), 30);
+		arrayArea.AddColumn(t_("x"), 10).Edit(edAreaX);
+		arrayArea.AddColumn(t_("y"), 10).Edit(edAreaY);
+		arrayArea.Add(t_("Left/Top [m]"));
+		arrayArea.Add(t_("Width/Height [m]"));
+		arrayArea.Add(t_("Number of points"));
+	}
+	opWaveHeight.WhenAction = [&]{
+		bool enabled = opWaveHeight.IsEnabled() && opWaveHeight;
+		arrayArea.Enable(enabled);
+	};
+	opWaveHeight.WhenAction();
+	
+	dropQTF.WhenAction =[&]() {
+		opAutoQTF.Enable(~dropQTF == 7);
+	};
+	opIrregular.WhenAction =[&]() {
+		opAutoIrregular.Enable(~opIrregular);
+	};
+	opIrregular.WhenAction();
+			
+	for (int i = 0; i < Hydro::NUMBEM; ++i)
+		if (Hydro::bemInfo[i].caseCanSave)
+			dropSolver.Add(i, Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)));		
+
+	dropSolver.SetIndex(min(dropSolverVal, dropSolver.GetCount()-1));
+	dropSolver.WhenAction = [&] {
+		int solver = ~dropSolver;
+		bool isNemoh = solver >= Hydro::NEMOH && solver <= Hydro::NEMOHv3;
+		
+		symX.Enable(!isNemoh && solver != Hydro::BEMROSETTA_H5);
+		symY.Enable(solver != Hydro::BEMROSETTA_H5);
+		opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::ORCAWAVE_YML);
+		opSplit.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
+		numSplit.Enable(opSplit.IsEnabled() && opSplit);
+		opThreads.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || 
+							  solver == Hydro::CAPYTAINE_PY || solver == Hydro::WAMIT || 
+							  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
+		numThreads.Enable(opThreads.IsEnabled() && !opThreads);
+		
+		labDOF.  Enable(isNemoh || solver == Hydro::HYDROSTAR);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
+		arrayDOF.Enable(isNemoh || solver == Hydro::HYDROSTAR);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
+		
+		withMesh.Enable(solver == Hydro::CAPYTAINE_PY);
+		withPotentials.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || 
+								   solver == Hydro::CAPYTAINE_PY || solver == Hydro::HAMS || 
+								   solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT);
+		arrayAdditional.Enable(solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT || solver == Hydro::ORCAWAVE_YML);
+		opWaveHeight.Enable(solver == Hydro::WAMIT ||  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
+		opWaveHeight.WhenAction();
+		
+		fileMesh.Enable(solver == Hydro::ORCAWAVE_YML);
+		epsilon.Enable(solver == Hydro::ORCAWAVE_YML);
+		gap.Enable(solver == Hydro::ORCAWAVE_YML);
+		butMesh.Enable(solver == Hydro::ORCAWAVE_YML);
+		butMeshClear.Enable(solver == Hydro::ORCAWAVE_YML);
+		
+		int idQTF = dropQTF.GetIndex();
+		if (idQTF >= 0)
+			idQTF = dropQTF.GetKey(idQTF);
+		dropQTF.Clear();
+		dropQTF.Add(0, t_("No"));
+		for (int i = 0; i < (int)strlen(Hydro::bemInfo[solver].md); ++i) {
+			char c = Hydro::bemInfo[solver].md[i];
+			if (c == '7')
+				dropQTF.Add(17, t_("Mean drift. Control surface/Middle field"));
+			else if (c == '8')
+				dropQTF.Add(18, t_("Mean drift. Momentum conservation/Far field"));
+			else if (c == '9')
+				dropQTF.Add(19, t_("Mean drift. Pressure integration/Near field"));
+		}
+		for (int i = 0; i < (int)strlen(Hydro::bemInfo[solver].qtf); ++i) {
+			char c = Hydro::bemInfo[solver].qtf[i];
+			if (c == '7')
+				dropQTF.Add(7, t_("Control surface/Middle field"));
+			else if (c == '8')
+				dropQTF.Add(8, t_("Momentum conservation/Far field"));
+			else if (c == '9')
+				dropQTF.Add(9, t_("Pressure integration/Near field"));
+		}
+		if (dropQTF.HasKey(idQTF))
+			dropQTF.SetIndex(dropQTF.FindKey(idQTF));
+		else
+			dropQTF.SetData(0);
+		dropQTF.DropWidth(GetDropWidth(dropQTF));
+		dropQTF.Enable(strlen(Hydro::bemInfo[solver].qtf) > 0);
+		dropQTF.WhenAction();
+	};
+	
+	dropSolver.WhenAction();
+	
+	butMeshClear << [&]() {
+		lidMesh.Clear();
+		SetTexts();
+	};	
+	butMesh << [&]() {
+		Body::Load(lidMesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
+		SetTexts();
+	};
+}
+
+void MainSolver_Save::SetTexts() {
+	if (lidMesh.IsEmpty())
+		labMesh.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
+	else
+		labMesh.SetText(F(t_("Panels: %d. Nodes: %d"), lidMesh.dt.mesh.panels.size(), lidMesh.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+}
+
 void MainSolverBody::SetTexts(bool updateInertia) {
 	if (mesh.IsEmpty())
 		labMesh.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
@@ -132,14 +272,14 @@ void MainSolverBody::SetTexts(bool updateInertia) {
 	}
 	
 	if (lid.IsEmpty())
-		labLid.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
+		labLid.SetText(t_("Not loaded")).SetFont(labLid.GetFont().Bold(false).Italic(true));
 	else
-		labLid.SetText(F(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+		labLid.SetText(F(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labLid.GetFont().Bold(true).Italic(false));
 	
 	if (cs.IsEmpty())
-		labCS.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
+		labCS.SetText(t_("Not loaded")).SetFont(labCS.GetFont().Bold(false).Italic(true));
 	else
-		labCS.SetText(F(t_("Panels: %d. Nodes: %d"), cs.dt.mesh.panels.size(), cs.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+		labCS.SetText(F(t_("Panels: %d. Nodes: %d"), cs.dt.mesh.panels.size(), cs.dt.mesh.nodes.size())).SetFont(labCS.GetFont().Bold(true).Italic(false));
 	
 	if (updateInertia) {
 		if (mesh.dt.M.size() == 36) 
@@ -161,6 +301,8 @@ void MainSolverBody::SetTexts(bool updateInertia) {
 }
 
 void MainSolver::Init() {
+	save.Init();
+	
 	tab.Add(genScroll.AddPaneV(gen).SizePos(), "1. General");
 	tab.Add(bodies.SizePos(), "2. Bodies");
 	tab.Add(save.SizePos(), "3. Save");
@@ -195,120 +337,7 @@ void MainSolver::Init() {
 	
 	loadFrom.WhenChange = [&] {return OnLoad();};
 	loadFrom.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10).UseDropping();
-	butLoad.WhenAction = [&] {loadFrom.DoGo();};
-
-	save.saveTo.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
-	save.butSave.WhenAction = [&] {OnSave();};
-	save.withPotentials.WhenAction = [&] {
-		if (save.withPotentials && int(~save.dropSolver) == Hydro::CAPYTAINE_PY)
-			save.withMesh <<= true;
-	;};
-	save.opSplit.WhenAction   = [&] {save.numSplit.Enable(save.opSplit);};
-	save.opThreads.WhenAction = [&] {save.numThreads.Enable(!save.opThreads);};
-	
-	save.arrayDOF.Reset();
-	save.arrayDOF.AddColumn(t_("DOF"));
-	save.arrayDOF.AddColumn(t_("Enabled")).With( 
-		[](One<Ctrl>& x) {
-			x.Create<Option>().NoWantFocus();
-		}
-	);
-	
-	for (int i = 0; i < 6; ++i)
-		save.arrayDOF.Add(InitCaps(BEM::StrDOF(i)), true);
-	
-	if (save.arrayAdditional.GetColumnCount() != 3) {
-		save.arrayAdditional.Appending().Removing().Editing().Sorting(true).MultiSelect().Clipboard().ExtraPaste().SelectRow(false).Duplicating().SetToolBar();
-		save.arrayAdditional.AddColumn(t_("x")).Edit(edAdditionalX);
-		save.arrayAdditional.AddColumn(t_("y")).Edit(edAdditionalY);
-		save.arrayAdditional.AddColumn(t_("z")).Edit(edAdditionalZ);
-	}
-	if (save.arrayArea.GetColumnCount() != 3) {
-		save.arrayArea.Editing().MultiSelect().Clipboard().Sorting(false).ExtraPaste().SelectRow(false);
-		save.arrayArea.AddColumn(t_("Data"), 30);
-		save.arrayArea.AddColumn(t_("x"), 10).Edit(edAreaX);
-		save.arrayArea.AddColumn(t_("y"), 10).Edit(edAreaY);
-		save.arrayArea.Add(t_("Left/Top [m]"));
-		save.arrayArea.Add(t_("Width/Height [m]"));
-		save.arrayArea.Add(t_("Number of points"));
-	}
-	save.opWaveHeight.WhenAction = [&]{
-		bool enabled = save.opWaveHeight.IsEnabled() && save.opWaveHeight;
-		save.arrayArea.Enable(enabled);
-	};
-	save.opWaveHeight.WhenAction();
-	
-	save.dropQTF.WhenAction =[&]() {
-		save.opAutoQTF.Enable(~save.dropQTF == 7);
-	};
-	save.opIrregular.WhenAction =[&]() {
-		save.opAutoIrregular.Enable(~save.opIrregular);
-	};
-	save.opIrregular.WhenAction();
-			
-	for (int i = 0; i < Hydro::NUMBEM; ++i)
-		if (Hydro::bemInfo[i].caseCanSave)
-			save.dropSolver.Add(i, Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)));		
-
-	save.dropSolver.SetIndex(min(dropSolverVal, save.dropSolver.GetCount()-1));
-	save.dropSolver.WhenAction = [&] {
-		int solver = ~save.dropSolver;
-		bool isNemoh = solver >= Hydro::NEMOH && solver <= Hydro::NEMOHv3;
-		
-		save.symX.Enable(!isNemoh && solver != Hydro::BEMROSETTA_H5);
-		save.symY.Enable(solver != Hydro::BEMROSETTA_H5);
-		save.opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::ORCAWAVE_YML);
-		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
-		save.numSplit.Enable(save.opSplit.IsEnabled() && save.opSplit);
-		save.opThreads.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || 
-							  solver == Hydro::CAPYTAINE_PY || solver == Hydro::WAMIT || 
-							  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
-		save.numThreads.Enable(save.opThreads.IsEnabled() && !save.opThreads);
-		
-		save.labDOF.  Enable(isNemoh || solver == Hydro::HYDROSTAR);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
-		save.arrayDOF.Enable(isNemoh || solver == Hydro::HYDROSTAR);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
-		
-		save.withMesh.Enable(solver == Hydro::CAPYTAINE_PY);
-		save.withPotentials.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || 
-								   solver == Hydro::CAPYTAINE_PY || solver == Hydro::HAMS || 
-								   solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT);
-		save.arrayAdditional.Enable(solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT || solver == Hydro::ORCAWAVE_YML);
-		save.opWaveHeight.Enable(solver == Hydro::WAMIT ||  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
-		save.opWaveHeight.WhenAction();
-		
-		int idQTF = save.dropQTF.GetIndex();
-		if (idQTF >= 0)
-			idQTF = save.dropQTF.GetKey(idQTF);
-		save.dropQTF.Clear();
-		save.dropQTF.Add(0, t_("No"));
-		for (int i = 0; i < (int)strlen(Hydro::bemInfo[solver].md); ++i) {
-			char c = Hydro::bemInfo[solver].md[i];
-			if (c == '7')
-				save.dropQTF.Add(17, t_("Mean drift. Control surface/Middle field"));
-			else if (c == '8')
-				save.dropQTF.Add(18, t_("Mean drift. Momentum conservation/Far field"));
-			else if (c == '9')
-				save.dropQTF.Add(19, t_("Mean drift. Pressure integration/Near field"));
-		}
-		for (int i = 0; i < (int)strlen(Hydro::bemInfo[solver].qtf); ++i) {
-			char c = Hydro::bemInfo[solver].qtf[i];
-			if (c == '7')
-				save.dropQTF.Add(7, t_("Control surface/Middle field"));
-			else if (c == '8')
-				save.dropQTF.Add(8, t_("Momentum conservation/Far field"));
-			else if (c == '9')
-				save.dropQTF.Add(9, t_("Pressure integration/Near field"));
-		}
-		if (save.dropQTF.HasKey(idQTF))
-			save.dropQTF.SetIndex(save.dropQTF.FindKey(idQTF));
-		else
-			save.dropQTF.SetData(0);
-		save.dropQTF.DropWidth(GetDropWidth(save.dropQTF));
-		save.dropQTF.Enable(strlen(Hydro::bemInfo[solver].qtf) > 0);
-		save.dropQTF.WhenAction();
-	};
-	
-	save.dropSolver.WhenAction();
+	butLoad.WhenAction = [&] {loadFrom.DoGo();};	
 	
 	gen.opInfinite.WhenAction = [&] {
 		gen.height.Enable(!bool(~gen.opInfinite));
@@ -348,6 +377,10 @@ void MainSolver::InitAfterSerialize(bool ret) {
 		save.opIncludeBin = true;
 	if (!ret || IsNull(save.numSplit)) 	
 		save.numSplit = 2;	
+	if (!ret || IsNull(save.epsilon)) 	
+		save.epsilon = 0.02;	
+	if (!ret || IsNull(save.gap)) 	
+		save.gap = 2;	
 	String manufacturer, productName, version, mbSerial;
 	int numberOfProcessors;
 	GetSystemInfo(manufacturer, productName, version, numberOfProcessors, mbSerial);
@@ -367,23 +400,27 @@ void MainSolver::Jsonize(JsonIO &json) {
 	if (json.IsLoading()) {
 		save.opIncludeBin = Null;
 		save.numSplit = Null;	
+		save.epsilon = Null;	
+		save.gap = Null;	
 		gen.xeff <<= Null;
 		gen.yeff <<= Null;
 	} else {
-		dropSolverVal = save.dropSolver.GetIndex();
+		save.dropSolverVal = save.dropSolver.GetIndex();
 	}
 	json
 		("loadFrom", loadFrom)
 		("saveTo", save.saveTo)
 		("opIncludeBin", save.opIncludeBin)
 		("numSplit", save.numSplit)
+		("epsilon", save.epsilon)
+		("gap", save.gap)
 		("numThreads", save.numThreads)
 		("opSplit", save.opSplit)
 		("xeff", gen.xeff)
 		("yeff", gen.yeff)
 		("gen_listFreq", gen.listFreq)
 		("gen_listHead", gen.listHead)
-		("dropSolver", dropSolverVal)
+		("dropSolver", save.dropSolverVal)
 		("height", gen.height)
 		("opInfinite", gen.opInfinite)
 		("gen_name", gen.name)
@@ -392,8 +429,8 @@ void MainSolver::Jsonize(JsonIO &json) {
 		("gen_opFreq", gen.opFreq)
 	;
 	if (json.IsLoading()) {
-		if (IsNull(dropSolverVal) || dropSolverVal < 0)
-			dropSolverVal = 0;
+		if (IsNull(save.dropSolverVal) || save.dropSolverVal < 0)
+			save.dropSolverVal = 0;
 		if (IsNull(gen.opFreq))
 			gen.opFreq <<= 1;
 	}
@@ -602,25 +639,30 @@ bool MainSolver::CopyHydro(Hydro &hy) {
 	hy.dt.css.SetCount(bodiesEach.size());
 	hy.dt.Nb = hy.dt.msh.size();
 	
-	for (int i = 0; i < hy.dt.Nb; ++i) {
-		Body &b = hy.dt.msh[i];
-		b = clone(bodiesEach[i].mesh);
-		hy.dt.lids[i] = clone(bodiesEach[i].lid);
-		hy.dt.css[i]  = clone(bodiesEach[i].cs);
-		b.dt.name     = ~bodiesEach[i].name;
-		b.dt.fileName = bodiesEach[i].fileMesh;
-		b.dt.c0[0]    = bodiesEach[i].x_0;
-		b.dt.c0[1]    = bodiesEach[i].y_0;
-		b.dt.c0[2]    = bodiesEach[i].z_0;
-		b.dt.cg[0]    = bodiesEach[i].x_g;
-		b.dt.cg[1]    = bodiesEach[i].y_g;
-		b.dt.cg[2]    = bodiesEach[i].z_g;
-		b.dt.M 		  = GridCtrlToMatrixXd(bodiesEach[i].M);
-		b.dt.Dlin 	  = GridCtrlToMatrixXd(bodiesEach[i].Dlin);
-		b.dt.Dquad 	  = GridCtrlToMatrixXd(bodiesEach[i].Dquad);
-		b.dt.Cadd 	  = GridCtrlToMatrixXd(bodiesEach[i].Cadd);
-		b.dt.Cmoor 	  = GridCtrlToMatrixXd(bodiesEach[i].Cmoor);
+	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+		Body &b = hy.dt.msh[ib];
+		const MainSolverBody &mb = bodiesEach[ib];
+		b = clone(mb.mesh);
+		hy.dt.lids[ib] = clone(mb.lid);
+		hy.dt.css[ib]  = clone(mb.cs);
+		b.dt.name     = ~mb.name;
+		b.dt.fileName = mb.fileMesh;
+		b.dt.c0[0]    = mb.x_0;
+		b.dt.c0[1]    = mb.y_0;
+		b.dt.c0[2]    = mb.z_0;
+		b.dt.cg[0]    = mb.x_g;
+		b.dt.cg[1]    = mb.y_g;
+		b.dt.cg[2]    = mb.z_g;
+		b.dt.M 		  = GridCtrlToMatrixXd(mb.M);
+		b.dt.Dlin 	  = GridCtrlToMatrixXd(mb.Dlin);
+		b.dt.Dquad 	  = GridCtrlToMatrixXd(mb.Dquad);
+		b.dt.Cadd 	  = GridCtrlToMatrixXd(mb.Cadd);
+		b.dt.Cmoor 	  = GridCtrlToMatrixXd(mb.Cmoor);
 	}
+	
+	hy.dt.standinglid = clone(save.lidMesh);
+	hy.dt.epsilon = save.epsilon;
+	hy.dt.gap = save.gap;
 	
 	hy.dt.Nf = gen.listFreq.number;
 	hy.dt.w.SetCount(gen.listFreq.number);

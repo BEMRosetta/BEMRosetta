@@ -247,7 +247,7 @@ String Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	if (!DirectoryCreateX(folder))
 		ret = F(t_("Impossible to create folder '%s' to store configuration file"), folder);
 	else {
-		String fileName = AFX(folder, "config.cf");
+		String fileName = folder / "config.cf";
 		if (!FileExists(fileName)) 
 			ret = t_("First time");
 		else {
@@ -260,8 +260,8 @@ String Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 					ret = F(t_("Problem loading configuration file '%s': %s"), fileName, ret);
 			}
 			if (!ret.IsEmpty()) {
-				DirectoryCreateX(AFX(folder, "Errors"));
-				FileCopy(fileName, AFX(folder, "Errors", "config.cf"));
+				DirectoryCreateX(folder / "Errors");
+				FileCopy(fileName, folder / "Errors" / "config.cf");
 			}
 		}
 	}
@@ -283,7 +283,7 @@ bool Main::StoreSerializeJson() {
 	String folder = GetBEMRosettaDataFolder();
 	if (!DirectoryCreateX(folder))
 		return false;
-	String fileName = AFX(folder, "config.cf");
+	String fileName = folder / "config.cf";
 	return StoreAsJsonFile(*this, fileName, true);
 }
 

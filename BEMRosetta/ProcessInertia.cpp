@@ -218,7 +218,7 @@ void MenuProcessInertia::Action() {
 		
 		if (isvol && mesh.dt.mesh.VolumeMatch(Bem().volError, Bem().volError) < 0) {
 			opInertia = 0;
-			throw Exc(t_("Incomplete mesh or wrongly oriented panels"));
+			return;//throw Exc(t_("Incomplete mesh or wrongly oriented panels"));
 		}
 		
 		if (IsNull(cg)) {

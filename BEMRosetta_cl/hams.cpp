@@ -24,7 +24,7 @@ String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Sta
 		dt.solver = Hydro::HAMS_WAMIT;
 		
 		int output_frequency_type = 0;
-		String controlFile = AFX(baseFolder, "Input", "ControlFile.in");
+		String controlFile = baseFolder / "Input" / "ControlFile.in";
 		if (FileExists(controlFile)) {
 			bool ismrel;
 			output_frequency_type = Load_ControlFile(controlFile, ismrel);
@@ -42,29 +42,29 @@ String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Sta
 		}
 
 		if (!onlycase) {
-			String wamitFile = AFX(baseFolder, "Output", "Wamit_format", "Buoy.1");
+			String wamitFile = baseFolder / "Output" / "Wamit_format" / "Buoy.1";
 			String ret = Wamit::Load(wamitFile, true, iperout, Status);
 			if (!ret.IsEmpty()) 
 				return ret;
 		}
 		
 		if (dt.Nb == 1) {
-			String hydroFile = AFX(baseFolder, "Input", "Hydrostatic.in");
+			String hydroFile = baseFolder / "Input" / "Hydrostatic.in";
 			if (FileExists(hydroFile)) 
 				LoadHydrostatic(hydroFile, 0);
 		} else {
 			for (int ib = 0; ib < dt.Nb; ++ib) {
-				String hydroFile = AFX(baseFolder, "Input", F("Hydrostatic_%d.in", ib+1));
+				String hydroFile = baseFolder / "Input" / F("Hydrostatic_%d.in", ib+1);
 				if (FileExists(hydroFile)) 
 					LoadHydrostatic(hydroFile, ib);
 			}
 		}
-		String settingsFile = AFX(baseFolder, "Settings.ctrl");
+		String settingsFile = baseFolder / "Settings.ctrl";
 		if (FileExists(settingsFile))
 			Load_Settings(settingsFile);
 		
 		// If Hydrostatic.in exists and the .hst file is filled with zeroes
-		String hydrostaticFile = AFX(baseFolder, "Hydrostatic.in");
+		String hydrostaticFile = baseFolder / "Hydrostatic.in";
 		if (FileExists(hydrostaticFile)) {
 			bool iszero = true;
 			if (IsLoadedC()) {
@@ -162,7 +162,7 @@ int Hams::Load_ControlFile(String fileName, bool &ismrel) {
 	dt.g = 9.80665;		// Is constant
 
 	String folder = GetFileFolder(fileName);
-	fileName = AFX(folder, "ControlFile.in");
+	fileName = folder / "ControlFile.in";
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return 0;
@@ -170,7 +170,7 @@ int Hams::Load_ControlFile(String fileName, bool &ismrel) {
 	dt.solver = Hydro::HAMS_WAMIT;	
 	dt.Nb = 1;				// If it is HAMS
 	dt.msh.SetCount(1);	
-	dt.msh[0].dt.fileName = AFX(folder, "HullMesh.pnl");
+	dt.msh[0].dt.fileName = folder / "HullMesh.pnl";
 	dt.msh[0].dt.name = "Body";
 	dt.lids.SetCount(1);
 				
@@ -251,7 +251,7 @@ int Hams::Load_ControlFile(String fileName, bool &ismrel) {
 			dt.lids.SetCount(dt.Nb);
 			if (dt.Nb > 1) {
 				for (int ib = 0; ib < dt.Nb; ++ib) {
-					dt.msh[ib].dt.fileName = AFX(folder, F("HullMesh_%d.pnl", ib+1));
+					dt.msh[ib].dt.fileName = folder / F("HullMesh_%d.pnl", ib+1);
 					dt.msh[ib].dt.name = F("Body_%d", ib+1);
 				}
 			}
@@ -339,10 +339,10 @@ int Hams::Load_ControlFile(String fileName, bool &ismrel) {
 			int remove_irr_freq = f.GetInt(1);	
 			if (remove_irr_freq > 0) {
 				if (dt.Nb == 1)	
-					dt.lids[0].dt.fileName = AFX(folder, "WaterplaneMesh.pnl");
+					dt.lids[0].dt.fileName = folder / "WaterplaneMesh.pnl";
 				else {
 					for (int ib = 0; ib < dt.Nb; ++ib)
-						dt.lids[ib].dt.fileName = AFX(folder, F("WaterplaneMesh_%d.pnl", ib+1));
+						dt.lids[ib].dt.fileName = folder / F("WaterplaneMesh_%d.pnl", ib+1);
 				}
 			}
 		}
@@ -425,11 +425,11 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		else
 			source = Bem().hamsmrelPath;
 		solvName = GetFileName(source);
-		String destNew = AFX(folderBase, solvName);
+		String destNew = folderBase / solvName;
 		if (!FileCopy(source, destNew)) 
 			throw Exc(F(t_("Problem copying exe file from '%s'"), source));
-		source = AFX(GetFileFolder(source), "libiomp5md.dll");		
-		destNew = AFX(folderBase, "libiomp5md.dll");		
+		source = GetFileFolder(source) / "libiomp5md.dll";		
+		destNew = folderBase / "libiomp5md.dll";		
 		if (!FileCopy(source, destNew)) 
 			throw Exc(F(t_("Problem copying dll file from '%s'"), source));					
 	}
@@ -438,7 +438,7 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 	if (bin && !ismrel) {
 		String source = Bem().hamsBodyPath;
 		meshName = GetFileName(source);
-		String destNew = AFX(folderBase, meshName);
+		String destNew = folderBase / meshName;
 		if (!FileCopy(source, destNew)) 
 			throw Exc(F(t_("Problem copying Hams WAMIT_MeshTran exe file from '%s'"), Bem().hamsBodyPath));				
 	} 
@@ -447,7 +447,7 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		String folder;
 		UVector<double> freqs;
 		if (numCases > 1) {
-			folder = AFX(folderBase, F("HAMS_Part_%d", i+1));
+			folder = folderBase / F("HAMS_Part_%d", i+1);
 			if (!DirectoryCreateX(folder))
 				throw Exc(F(t_("Problem creating '%s' folder"), folder));
 			Upp::Block(dt.w, freqs, ifr, valsf[i]);
@@ -456,7 +456,7 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			folder = folderBase;
 			freqs = clone(dt.w);
 		}
-		String folderInput = AFX(folder, "Input");
+		String folderInput = folder / "Input";
 		if (!DirectoryCreateX(folderInput))
 			throw Exc(F(t_("Problem creating '%s' folder"), folderInput));
 		
@@ -473,27 +473,27 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		if (!ismrel) {
 			int ib = 0;
 			
-			String dest = AFX(folderInput, "HullMesh.pnl");
+			String dest = folderInput / "HullMesh.pnl";
 			Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 			
 			if (irrRemoval) {
-				dest = AFX(folderInput, "WaterplaneMesh.pnl");
+				dest = folderInput / "WaterplaneMesh.pnl";
 				Body::SaveAs(dt.lids[ib], dest, Body::HAMS_PNL, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 			}
 		} else {
 			for (int ib = 0; ib < dt.Nb; ++ib) {
 				String dest;
 				if (dt.Nb == 1)
-					dest = AFX(folderInput, "HullMesh.pnl");
+					dest = folderInput / "HullMesh.pnl";
 				else
-					dest = AFX(folderInput, F("HullMesh_%d.pnl", ib+1));
+					dest = folderInput / F("HullMesh_%d.pnl", ib+1);
 				Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 				
 				if (irrRemoval) {
 					if (dt.Nb == 1)
-						dest = AFX(folderInput, "WaterplaneMesh.pnl");
+						dest = folderInput / "WaterplaneMesh.pnl";
 					else
-						dest = AFX(folderInput, F("WaterplaneMesh_%d.pnl", ib+1));
+						dest = folderInput / F("WaterplaneMesh_%d.pnl", ib+1);
 					Body::SaveAs(dt.lids[ib], dest, Body::HAMS_PNL, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 				}
 			}
@@ -502,25 +502,25 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		if (!ismrel)
 			Save_Settings(folder);
 		
-		String folderOutput = AFX(folder, "Output");
+		String folderOutput = folder / "Output";
 		if (!DirectoryCreateX(folderOutput))
 			throw Exc(F(t_("Problem creating '%s' folder"), folderOutput));
-		if (!DirectoryCreateX(AFX(folderOutput, "Hams_format")))
-			throw Exc(F(t_("Problem creating '%s' folder"), AFX(folderOutput, "Hams_format")));
-		if (!DirectoryCreateX(AFX(folderOutput, "Hydrostar_format")))
-			throw Exc(F(t_("Problem creating '%s' folder"), AFX(folderOutput, "Hydrostar_format")));
-		if (!DirectoryCreateX(AFX(folderOutput, "Wamit_format")))
-			throw Exc(F(t_("Problem creating '%s' folder"), AFX(folderOutput, "Wamit_format")));
+		if (!DirectoryCreateX(folderOutput / "Hams_format"))
+			throw Exc(F(t_("Problem creating '%s' folder"), folderOutput / "Hams_format"));
+		if (!DirectoryCreateX(folderOutput / "Hydrostar_format"))
+			throw Exc(F(t_("Problem creating '%s' folder"), folderOutput / "Hydrostar_format"));
+		if (!DirectoryCreateX(folderOutput / "Wamit_format"))
+			throw Exc(F(t_("Problem creating '%s' folder"), folderOutput / "Wamit_format"));
 		
 		if (numCases > 1) 
-			Save_Bat(folderBase, F("HAMS_Part_%d.bat", i+1), F("HAMS_Part_%d", i+1), AFX("..", solvName), AFX("..", meshName));
+			Save_Bat(folderBase, F("HAMS_Part_%d.bat", i+1), F("HAMS_Part_%d", i+1), ".." / solvName, ".." / meshName);
 		else
 			Save_Bat(folder, "HAMS.bat", Null, solvName, meshName);
 	}
 }
 
 void Hams::Save_Bat(String folder, String batname, String caseFolder, /*bool bin, */String solvName, String meshName) const {
-	String fileName = AFX(folder, batname);
+	String fileName = folder / batname;
 	FileOut bat(fileName);
 	if (!bat.IsOpen())
 		throw Exc(F(t_("Impossible to create '%s'"), fileName));
@@ -564,9 +564,9 @@ void Hams::Save_Hydrostatic(String folderInput, bool ismrel) const {
 	String fileName;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		if (!ismrel || dt.Nb == 1)
-			fileName = AFX(folderInput, "Hydrostatic.in");
+			fileName = folderInput / "Hydrostatic.in";
 		else
-			fileName = AFX(folderInput, F("Hydrostatic_%d.in", ib+1));
+			fileName = folderInput / F("Hydrostatic_%d.in", ib+1);
 		FileOut out(fileName);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to create '%s'"), fileName));
@@ -588,13 +588,13 @@ void Hams::Save_Hydrostatic(String folderInput, bool ismrel) const {
 }
 
 void Hams::Save_Settings(String folderInput) const {
-	String fileName = AFX(folderInput, "Settings.ctrl");
+	String fileName = folderInput / "Settings.ctrl";
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(F(t_("Impossible to create '%s'"), fileName));
 	
 	Body mesh;
-	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
+	String res = Body::Load(mesh, folderInput / "Input" / "HullMesh.pnl", dt.rho, dt.g, Null, Null, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
@@ -605,7 +605,7 @@ void Hams::Save_Settings(String folderInput) const {
 		
 		mesh.Append(dt.lids[0].dt.mesh, rho_ndim(), g_ndim());
 	}
-	Body::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), false, false);	
+	Body::SaveAs(mesh, folderInput / "Input" / "mesh.gdf", Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), false, false);	
 	
 	out << dt.g << "\n";
 	out << dt.rho << "\n";
@@ -623,7 +623,7 @@ void Hams::Save_Settings(String folderInput) const {
 
 void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 					int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints, bool ismrel) const {
-	String fileName = AFX(folderInput, "ControlFile.in");
+	String fileName = folderInput / "ControlFile.in";
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(F(t_("Impossible to create '%s'"), fileName));	

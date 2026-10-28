@@ -637,7 +637,7 @@ String BEM::LoadSerializeJson() {
 	if (!DirectoryCreateX(folder))
 		ret = F(t_("Impossible to create folder '%s' to store configuration file"), folder);
 	else {
-		String fileName = AFX(folder, "configdata.cf");
+		String fileName = folder / "configdata.cf";
 		if (!FileExists(fileName)) 
 			ret = t_("First time");
 		else {
@@ -650,8 +650,8 @@ String BEM::LoadSerializeJson() {
 					ret = F(t_("Problem loading configuration file '%s': %s"), fileName, ret);
 			}
 			if (!ret.IsEmpty()) {
-				DirectoryCreateX(AFX(folder, "Errors"));
-				FileCopy(fileName, AFX(folder, "Errors", "configdata.cf"));
+				DirectoryCreateX(  folder / "Errors");
+				FileCopy(fileName, folder / "Errors" / "configdata.cf");
 			}
 		}
 	}
@@ -718,10 +718,10 @@ bool BEM::ClearTempFiles() {
 }
 	
 bool BEM::StoreSerializeJson() {
-	String folder = AFX(GetAppDataFolder(), "BEMRosetta");
+	String folder = GetAppDataFolder() / "BEMRosetta";
 	if (!DirectoryCreateX(folder))
 		return 0;
-	String fileName = AFX(folder, "configdata.cf");
+	String fileName = folder / "configdata.cf";
 	return StoreAsJsonFile(*this, fileName, false);
 }
 

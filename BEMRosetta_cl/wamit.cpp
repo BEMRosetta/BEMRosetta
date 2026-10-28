@@ -16,28 +16,28 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 		String filepot, filefrc, filecfg;
 		
 		if (!isHams) {
-			String config_wam = AFX(folder, "config.wam");
+			String config_wam = folder / "config.wam";
 			if (FileExists(config_wam))
 				Load_cfg(config_wam, iperin, iperout, dt.qtftype, ialtfrc);
 			
-			String fnames_wam = AFX(folder, "fnames.wam");
+			String fnames_wam = folder / "fnames.wam";
 			BEM::Print("\n- " + F(t_("Wamit file .wam file '%s'"), GetFileName(fnames_wam)));
 			if (!Load_wam(fnames_wam, filepot, filefrc, filecfg))
 				BEM::Print(F(": ** wam ") + t_("Not found") + "**");
 			
 			if (!filecfg.IsEmpty()) {
 				dt.name = GetFileTitle(filecfg);
-				if (FileExists(AFX(folder, filecfg)))
-					filecfg = AFX(folder, filecfg);
+				if (FileExists(folder / filecfg))
+					filecfg = folder / filecfg;
 				if (!Load_cfg(filecfg, iperin, iperout, dt.qtftype, ialtfrc))
 					BEM::Print(F(": ** cfg ") + t_("Not found") + "**");
 			}
 			if (!filefrc.IsEmpty())
-				if (FileExists(AFX(folder, filefrc)))
-					filefrc = AFX(folder, filefrc);			
+				if (FileExists(folder / filefrc))
+					filefrc = folder / filefrc;			
 			if (!filepot.IsEmpty())
-				if (FileExists(AFX(folder, filepot)))
-					filepot = AFX(folder, filepot);				
+				if (FileExists(folder / filepot))
+					filepot = folder / filepot;				
 		}	
 		if (ext == ".out") {
 			String fileout = ForceExtSafer(file, ".out");
@@ -56,7 +56,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 				}
 			}
 		} else if (F(".mcn.hdf").Find(ext) >= 0) {
-			FindFile ff(AFX(folder, "*.out"));
+			FindFile ff(folder / "*.out");
 			if (!ff)
 				BEM::Print(F(": ** out associated to input file ") + t_("Not found") + "**");
 			else if (!Load_out(ff.GetPath(), Status)) 
@@ -88,7 +88,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 				}
 				
 				if (dt.msh.size() > 0) {
-					String filegdf = AFX(folder, dt.msh[0].dt.fileName);		// To get LEN and g
+					String filegdf = folder / dt.msh[0].dt.fileName;		// To get LEN and g
 					BEM::Print("\n- " + F(t_("Mesh file .gdf file '%s'"), GetFileName(filegdf)));
 					if (!Load_gdf(filegdf))
 						BEM::Print(F(": ** gdf ") + t_("Not found") + "**");
@@ -111,7 +111,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 			else 
 				file1 = ForceExtSafer(file, ".1");
 			if (isHams && !FileExists(file1))
-				file1 = AFX(folder, "AmssDamp.1");
+				file1 = folder / "AmssDamp.1";
 			
 			BEM::Print("\n- " + F(t_("Hydrodynamic coefficients A and B .1 file '%s'"), GetFileName(file1)));
 			if (!Load_1(file1, iperout, isHams))
@@ -121,7 +121,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 				   file3 = ForceExtSafer(file1, ".3");
 			
 			if (isHams && !FileExists(file3))
-				file3 = AFX(folder, "ExcForce.3");
+				file3 = folder / "ExcForce.3";
 
 	   
 			if (ext == ".2")
@@ -137,14 +137,14 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 			
 			String fileHST = ForceExtSafer(file, ".hst");
 			if (isHams && !FileExists(fileHST))
-				fileHST = AFX(folder, "Hydrostat.hst");
+				fileHST = folder / "Hydrostat.hst";
 			BEM::Print("\n- " + F(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
 			if (!Load_hst(fileHST))
 				BEM::Print(F(": ** .hst ") + t_("Not found or empty") + "**");
 		
 			String fileRAO = ForceExtSafer(file, ".4");
 			if (isHams && !FileExists(fileRAO))
-				fileRAO = AFX(folder, "Motion.4");
+				fileRAO = folder / "Motion.4";
 			BEM::Print("\n- " + F(t_("RAO file '%s'"), GetFileName(fileRAO)));
 			if (!Load_4(fileRAO, iperout))
 				BEM::Print(F(": ** .4 ") + t_("Not found or empty") + "**");
@@ -1132,7 +1132,7 @@ bool Wamit::Load_wam(String fileName, String &filepot, String &filefrc, String &
 			continue;
 		String file = f.GetText(0);
 		if (!FileExists(file))
-			file = AFX(folder, file);
+			file = folder / file;
 		String ext = GetFileExt(file);
 		if (ext == ".pot")
 			filepot = file;
@@ -1241,7 +1241,7 @@ bool Wamit::Load_pot(String fileName, int iperin) {
 			
 		b.dt.fileName = f.GetText(0);
 		if (!FileExists(b.dt.fileName))
-			b.dt.fileName = AFX(GetFileFolder(fileName), b.dt.fileName);
+			b.dt.fileName = GetFileFolder(fileName) / b.dt.fileName;
 		
 		dt.g = Bem().g;
 		Body::Load(b, b.dt.fileName, dt.rho, dt.g, Null, Null, false);
@@ -1465,7 +1465,7 @@ bool Wamit::Load_frc2(String fileName, int ialtfrc) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			f.GetLine();
 			String file = f.GetText(0);
-			file = AFX(folder, file);
+			file = folder / file;
 			if (!Load_frc1_3(file, ib))
 				throw Exc(F(t_("File '%s' not found"), file)); 
 		}
@@ -2914,7 +2914,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 				if (IsNull(qtfHeadingId) ||
 					(qtfHeadingId == -1 && abs(h1 - h2) < 0.01) ||
 					(ih == qtfHeadingId)) {
-					if (ih == qtfHeadingId)
+					if (!IsNull(qtfHeadingId) && ih == qtfHeadingId)
 						h1 = h2 = heading;
 					if (headids[ih] >= 0) {
 						for (int ib = 0; ib < dt.Nb; ++ib)
@@ -3148,7 +3148,7 @@ void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const U
 		out << "\n" << name << "\n";
 		out << F("%.3f %.3f %.3f 0.0 ", dt.msh[ib].dt.c0.x, dt.msh[ib].dt.c0.y, dt.msh[ib].dt.c0.z) << "% XBODY(1-4)\n";
 		out << "1 1 1 1 1 1  % MODE(1:6)";
-		names << AFX(folder, name);
+		names << folder / name;
 	}
 	if (withMesh) {
 		UArray<Body> msh = clone(dt.msh);
@@ -3180,7 +3180,7 @@ void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const U
 }
 
 void Wamit::Save_Config(String folder, int qtfType, bool onlyMeanDrift, int numThreads) const {
-	String fileBat = AFX(folder, "config.wam");
+	String fileBat = folder / "config.wam";
 	FileOut file(fileBat);
 	if (!file)
 		throw Exc(F(t_("Problem creating '%s' file"), fileBat));
@@ -3198,7 +3198,7 @@ void Wamit::Save_Config(String folder, int qtfType, bool onlyMeanDrift, int numT
  		<< " RAMGBMAX=4\n"
  		<< " NCPU=" << numThreads << "\n"
   		<< " USERID_PATH=" << wamitFolder << "   (directory for *.exe, *.dll, and userid.wam)\n"
-  		<< " LICENSE_PATH=" << AFX(wamitFolder, "license") << "\n"
+  		<< " LICENSE_PATH=" << wamitFolder / "license" << "\n"
   	;
 }
 
@@ -3328,7 +3328,7 @@ void Wamit::Save_fdf(String fileName, double rpart) const {
 }
  
 void Wamit::Save_Fnames(String folder, int qtfType, bool onlyMeanDrift) const {
-	String fileBat = AFX(folder, "fnames.wam");
+	String fileBat = folder / "fnames.wam";
 	FileOut file(fileBat);
 	if (!file)
 		throw Exc(F(t_("Problem creating '%s' file"), fileBat));
@@ -3361,14 +3361,14 @@ void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<
 	bool ishigh = !First(dt.msh).dt.spline.IsEmpty();
 	bool is6 = (qtfType > 0 && !onlyMeanDrift) || Bem().opForceV6;
 				
-	Save_pot (AFX(folder, "Wamit_pot.pot"), true, x0z, y0z, dt.lids, irregular, autoIrregular, is6);
+	Save_pot (folder / "Wamit_pot.pot", true, x0z, y0z, dt.lids, irregular, autoIrregular, is6);
 
-	Save_frc2(AFX(folder, "Wamit_frc.frc"), true, qtfType, onlyMeanDrift, listPoints, is6);
+	Save_frc2(folder / "Wamit_frc.frc", true, qtfType, onlyMeanDrift, listPoints, is6);
 
-	Save_cfg (AFX(folder, "Wamit_cfg.cfg"), qtfType, onlyMeanDrift, !dt.lids.IsEmpty() && !dt.lids[0].IsEmpty() && irregular, autoIrregular, false, is6, ishigh, !listPoints.IsEmpty());
+	Save_cfg (folder / "Wamit_cfg.cfg", qtfType, onlyMeanDrift, !dt.lids.IsEmpty() && !dt.lids[0].IsEmpty() && irregular, autoIrregular, false, is6, ishigh, !listPoints.IsEmpty());
 
 	if (qtfType > 0 && !onlyMeanDrift)
-		Save_pt2(AFX(folder, "Wamit_pt2.pt2"));
+		Save_pt2(folder / "Wamit_pt2.pt2");
 	
 	double rpart = 0;	// Maximum radius of the area covered by the set of bodies
 	if (qtfType == 7) {
@@ -3392,7 +3392,7 @@ void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<
 					cs[ib].dt.spline.GetHullLid();
 					cs[ib].dt.spline.Translate(-dt.msh[ib].dt.c0);	
 				}
-				names << AFX(folder, F("Body_%d.csf", ib+1));
+				names << folder / F("Body_%d.csf", ib+1);
 			}
 			int nNodes, nPanels;
 			Body::SaveAs(cs, names, iscs2 ? Body::WAMIT_CSF2 : Body::WAMIT_CSF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z, nNodes, nPanels,
@@ -3402,9 +3402,9 @@ void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<
 		rpart = SaveAutoCSF_Circle(folder, x0z, y0z, false);
 	
 	if (qtfType > 0 && !onlyMeanDrift)
-		Save_fdf(AFX(folder, "Wamit_fdf.fdf"), rpart);
+		Save_fdf(folder / "Wamit_fdf.fdf", rpart);
 			
-	String fileBat = AFX(folder, "Wamit_bat.bat");		
+	String fileBat = folder / "Wamit_bat.bat";		
 	FileOut bat(fileBat);
 	if (!bat)
 		throw Exc(F(t_("Problem creating '%s' file"), fileBat));
@@ -3466,7 +3466,7 @@ double Wamit::SaveAutoCSF_Circle(String folder, bool x0z, bool y0z, bool saveCsf
 	}
 	// Save the files
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		String name = AFX(folder, F("Body_%d.csf", ib+1));
+		String name = folder / F("Body_%d.csf", ib+1);
 		FileOut out(name);
 		
 		out << "1\t\tILOWHICSF\n"
@@ -3561,7 +3561,7 @@ void Wamit::SaveAutoCSF_Rectangle(String folder, bool x0z, bool y0z) const {
 	}
 	// Save the files
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		String name = AFX(folder, F("Body_%d.csf", ib+1));
+		String name = folder / F("Body_%d.csf", ib+1);
 		FileOut out(name);
 		
 		out << "1\t\tILOWHICSF\n"

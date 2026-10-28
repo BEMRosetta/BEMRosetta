@@ -1079,11 +1079,11 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 
 void FastScatterTabs::Init(String appDataFolder, StatusBar &_statusBar) {
 	statusBar = &_statusBar;
-	String folder = AFX(appDataFolder, "FASTScatter");
+	String folder = appDataFolder / "FASTScatter";
 	if (!DirectoryCreateX(folder))
 		return;
 		
-	LoadFromJsonFile(*this, AFX(folder, "FASTScatter.json"));
+	LoadFromJsonFile(*this, folder / "FASTScatter.json");
 	
 	tabBar.Crosses(true).ContextMenu(true);
 	tabBar.SetTop();
@@ -1313,7 +1313,7 @@ FastScatterTabs::~FastScatterTabs() {
 	for (int i = 0; i < tabScatters.size(); ++i)
 		tabScatters[i].fscbase.SaveParams();	
 	
-	String file = AFX(GetAppDataFolder(), "BEMRosetta", "FASTScatter", "FASTScatter.json");	
+	String file = GetAppDataFolder() / "BEMRosetta" / "FASTScatter" / "FASTScatter.json";	
 	StoreAsJsonFile(*this, file, true);
 }
 
@@ -1342,16 +1342,16 @@ void FastScatterBase::LoadParams() {
 	String strpath = SHA1StringS(~file).Left(12);
 	String strname = SHA1StringS(GetFileName(~file)).Left(12);
 	
-	String folder = AFX(GetAppDataFolder(), "BEMRosetta", "FASTScatter");
+	String folder = GetAppDataFolder() / "BEMRosetta" / "FASTScatter";
 	if (!DirectoryCreateX(folder))
 		return;
 	
 	String fileName;
-	FindFile ffpath(AFX(folder, strpath + "_*.json"));
+	FindFile ffpath(folder / strpath + "_*.json");
 	if (ffpath) 
 		fileName = ffpath.GetPath();
 	else {
-		FindFile ffname(AFX(folder,  "*_" + strname + ".json"));
+		FindFile ffname(folder / "*_" + strname + ".json");
 		if (ffname) 
 			fileName = ffname.GetPath();
 	}
@@ -1369,11 +1369,11 @@ void FastScatterBase::SaveParams() {
 	String strpath = SHA1StringS(~file).Left(12);
 	String strname = SHA1StringS(GetFileName(~file)).Left(12);
 	
-	String folder = AFX(GetAppDataFolder(), "BEMRosetta", "FASTScatter");
+	String folder = GetAppDataFolder() / "BEMRosetta" / "FASTScatter";
 	if (!DirectoryCreateX(folder))
 		return;
 	
-	String fileName = AFX(folder, strpath + "_" + strname + ".json");
+	String fileName = folder / strpath + "_" + strname + ".json";
 
 	Params params;
 	params.Get(leftSearch.arrayParams, rightSearch.arrayParams);

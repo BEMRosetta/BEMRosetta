@@ -728,16 +728,16 @@ public:
 		String path = GetFileFolder(file);
 		
 		fast.fileName = file;
-		elastodyn.fileName = AFX(path, fast.GetString("EDFile"));
+		elastodyn.fileName = path / fast.GetString("EDFile");
 		if (GetFileTitle(elastodyn.fileName).Find("unused") >= 0)
 			elastodyn.fileName = "";
-		hydrodyn.fileName = AFX(path, fast.GetString("HydroFile"));
+		hydrodyn.fileName = path / fast.GetString("HydroFile");
 		if (GetFileTitle(hydrodyn.fileName).Find("unused") >= 0)
 			hydrodyn.fileName = "";
-		inflowfile.fileName = AFX(path, fast.GetString("InflowFile"));
+		inflowfile.fileName = path / fast.GetString("InflowFile");
 		if (GetFileTitle(inflowfile.fileName).Find("unused") >= 0)
 			inflowfile.fileName = "";
-		subdyn.fileName = AFX(path, fast.GetString("SubFile"));
+		subdyn.fileName = path / fast.GetString("SubFile");
 		if (GetFileTitle(subdyn.fileName).Find("unused") >= 0)
 			subdyn.fileName = "";
 		

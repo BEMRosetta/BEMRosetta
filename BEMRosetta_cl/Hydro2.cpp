@@ -823,6 +823,8 @@ void Hydro::Data::Copy(const Hydro::Data &hyd) {
     lids = clone(hyd.lids);
     css = clone(hyd.css);
     
+    standinglid = clone(hyd.standinglid);
+    
     pots_rad = clone(hyd.pots_rad);
     pots_dif = clone(hyd.pots_dif);
     pots_inc = clone(hyd.pots_inc);
@@ -1501,7 +1503,7 @@ void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
 				}
 }
 
-void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading, int ib, double heading) {
+void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading, int ib, double heading, bool symmetrize) const {
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(fileName));
 		
@@ -1530,13 +1532,16 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 	BasicBEM::HeadingType htp = Hydro::ShortestHeadingRange(dt.head);
 	BasicBEM::HeadingType mtp = Hydro::ShortestHeadingRange(dt.mdhead);
 	BasicBEM::HeadingType qtp = Hydro::ShortestHeadingRange(dt.qhead);
-	Hydro tosave, *save;
-	if (htp != BasicBEM::HEAD_0_360 || mtp != BasicBEM::HEAD_0_360 || qtp != BasicBEM::HEAD_0_360) {
-		tosave = clone(*this);
+	
+	Hydro tosave = clone(*this), *save;
+
+	if (symmetrize)
+		tosave.Symmetrize();
+	
+	if (htp != BasicBEM::HEAD_0_360 || mtp != BasicBEM::HEAD_0_360 || qtp != BasicBEM::HEAD_0_360) 
 		tosave.SortHeadings(htp, mtp, qtp);
-		save = &tosave;
-	} else
-		save = this;
+			
+	save = &tosave;
 	
 	if (type == WAMIT_OUT)
 		static_cast<Wamit&>(*save).Save_out(fileName);			
@@ -1548,8 +1553,6 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		static_cast<Fast&>(*save).Save(fileName, Status, qtfHeading);		
 	else if (type == BEMROSETTA)
 		save->SaveSerialization(fileName);		
-	//else if (type == AQWA)
-		//static_cast<Aqwa&>(*save).Save(fileName, Status);		
 	else if (type == AQWA_QTF)
 		static_cast<Aqwa&>(*save).Save(fileName, Status);		
 	else if (type == CSV_MAT)

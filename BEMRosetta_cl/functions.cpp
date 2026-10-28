@@ -11,7 +11,7 @@ using namespace Eigen;
 
 
 String GetBEMRosettaDataFolder() {
-	return AFX(GetAppDataFolder(), "BEMRosetta");
+	return GetAppDataFolder() / "BEMRosetta";
 }
 
 double GetKirfMaxT(const VectorXd &w) {

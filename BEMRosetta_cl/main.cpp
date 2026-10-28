@@ -54,17 +54,17 @@ CONSOLE_APP_MAIN
 			throw Exc("Please include in command line binary and BEMRosetta folders");
 		
 		String unittestFolder = command[0];
-		String binFolder = AFX(unittestFolder, ".\\.test");
-		String bemFolder = AFX(unittestFolder, "..");
-		String installFolder = AFX(bemFolder, "install");
-		String export_h = AFX(bemFolder, "BEMRosetta_cl", "libbemrosetta.h"); 
+		String binFolder = unittestFolder / ".\\.test";
+		String bemFolder = unittestFolder / "..";
+		String installFolder = bemFolder / "install";
+		String export_h = bemFolder / "BEMRosetta_cl" / "libbemrosetta.h"; 
 #endif
 #ifdef flagBEMR_TEST_DLL
-		FileDelete(AFX(binFolder, "libbemrosetta.exp"));
-		//FileDelete(AFX(binFolder, "libbemrosetta.lib"));
+		FileDelete(binFolder / "libbemrosetta.exp");
+		//FileDelete(binFolder / "libbemrosetta.lib");
 		
 		Dl dll;		
-		if (!dll.Load(AFX(binFolder, "libbemrosetta.dll")))
+		if (!dll.Load(binFolder / "libbemrosetta.dll"))
 			throw Exc(F("DLL not found in '%s'", binFolder));
 		
 		DLLFunction(dll, void, 		   _BMR_Init, ());
@@ -119,7 +119,7 @@ CONSOLE_APP_MAIN
 		//Cout() << strList;
 
 		strList = "// BEMRosetta functions list\n\n" + strList;	
-		if (!SaveFile(AFX(binFolder, "libbemrosetta.txt"), strList))
+		if (!SaveFile(binFolder / "libbemrosetta.txt", strList))
 			throw Exc(t_("Impossible to save DLL functions list file"));
 
 		Cout() << "\nC declarations:\n";
@@ -127,64 +127,64 @@ CONSOLE_APP_MAIN
 		cHelp << "[A4* C API&&]&";
 		String strC = BMR_strCDeclaration(LoadFile(export_h), cHelp);
 		String cHelpExample = "[A4* C Example&&]";
-		cHelpExample << "[C2 " << SimpleCppToQtf(LoadFile(AFX(unittestFolder, "test.c")));
+		cHelpExample << "[C2 " << SimpleCppToQtf(LoadFile(unittestFolder / "test.c"));
 		
 		Cout() << "\nC++ declarations and help:\n";
 		String cppHelp = GetTppHeader("C++ API");
 		cppHelp << "[A4* C`+`+ API&&]&";
 		String strCpp = BMR_strCppDeclaration(LoadFile(export_h), cppHelp);
 		String cppHelpExample = "[A4* C`+`+ Example&&]";
-		cppHelpExample << "[C2 " << SimpleCppToQtf(LoadFile(AFX(unittestFolder, "test.cpp")));
+		cppHelpExample << "[C2 " << SimpleCppToQtf(LoadFile(unittestFolder / "test.cpp"));
 		
 		Cout() << "\nPython declarations:\n";
 		String pyHelp = GetTppHeader("Python API");
 		pyHelp << "[A4* Python API&&]&";
 		String strPy = BMR_strPythonDeclaration(LoadFile(export_h), pyHelp);
 		String pyHelpExample = "[A4* Python Example&&]";
-		pyHelpExample << "[C2 " << SimplePythonToQtf(LoadFile(AFX(unittestFolder, "test.py")));
+		pyHelpExample << "[C2 " << SimplePythonToQtf(LoadFile(unittestFolder / "test.py"));
 		
 		
 		
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
-		if (!SaveFile(AFX(binFolder, "libbemrosetta.py"), strPy))
+		if (!SaveFile(binFolder / "libbemrosetta.py", strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
-		if (!SaveFile(AFX(binFolder, "libbemrosetta.h"), strC))
+		if (!SaveFile(binFolder / "libbemrosetta.h", strC))
 			throw Exc(t_("Impossible to save C declarations file"));		
-		if (!SaveFile(AFX(binFolder, "libbemrosetta.hpp"), strCpp))
+		if (!SaveFile(binFolder / "libbemrosetta.hpp", strCpp))
 			throw Exc(t_("Impossible to save C++ declarations file"));
 		
- 		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Cpp_en-us.tpp"), cppHelp))
+ 		if (!SaveFile(bemFolder / "BEMRosetta" / "main.tpp" / "Cpp_en-us.tpp", cppHelp))
 			throw Exc(t_("Impossible to save C++ help"));		
- 		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Cpp_Example_en-us.tpp"), cppHelpExample))
+ 		if (!SaveFile(bemFolder / "BEMRosetta" / "main.tpp" / "Cpp_Example_en-us.tpp", cppHelpExample))
 			throw Exc(t_("Impossible to save C++ example"));
 		
-		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "C_en-us.tpp"), cHelp))
+		if (!SaveFile(bemFolder / "BEMRosetta" / "main.tpp" / "C_en-us.tpp", cHelp))
 			throw Exc(t_("Impossible to save C help"));		
- 		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "C_Example_en-us.tpp"), cHelpExample))
+ 		if (!SaveFile(bemFolder / "BEMRosetta" / "main.tpp" / "C_Example_en-us.tpp", cHelpExample))
 			throw Exc(t_("Impossible to save C example"));
 
-		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Python_en-us.tpp"), pyHelp))
+		if (!SaveFile(bemFolder / "BEMRosetta" / "main.tpp" / "Python_en-us.tpp", pyHelp))
 			throw Exc(t_("Impossible to save Python help"));	
- 		if (!SaveFile(AFX(bemFolder, "BEMRosetta", "main.tpp", "Python_Example_en-us.tpp"), pyHelpExample))
+ 		if (!SaveFile(bemFolder / "BEMRosetta" / "main.tpp" / "Python_Example_en-us.tpp", pyHelpExample))
 			throw Exc(t_("Impossible to save Python example"));
 							 		
 #endif
 
 #if defined(COMPILER_MSC) && defined(flagBEMR_TEST_DLL)
-		String wxs = LoadFile(AFX(installFolder, "BEMRosetta_master.wxs"));
+		String wxs = LoadFile(installFolder / "BEMRosetta_master.wxs");
 		if (wxs.IsEmpty())
 			throw Exc(t_("Installer definition file not found"));
-		String strver = LoadFile(AFX(installFolder, "build.txt"));
+		String strver = LoadFile(installFolder / "build.txt");
 		if (strver.IsEmpty())
 			throw Exc(t_("Version file not found"));
 		int ver = ScanInt(strver);
 		if (IsNull(ver) || ver < 1)
 			throw Exc(t_("Wrong version found"));
 		ver++;
-		if (!SaveFile(AFX(installFolder, "build.txt"), FormatInt(ver)))
+		if (!SaveFile(installFolder / "build.txt", FormatInt(ver)))
 			throw Exc(t_("Impossible to save version file"));
 		wxs.Replace("$VERSION$", FormatInt(ver));
-		if (!SaveFile(AFX(installFolder, "BEMRosetta.wxs"), wxs))
+		if (!SaveFile(installFolder / "BEMRosetta.wxs", wxs))
 			throw Exc(t_("Impossible to save installer file"));
 #endif
 
@@ -241,7 +241,7 @@ CONSOLE_APP_MAIN
 			Cout() << "\n";
 		}
 		Cout() << "\n\nLoading FAST .out file";
-		String outfile = AFX(bemFolder, "examples/fast.out/demo.outb");
+		String outfile = bemFolder / "examples/fast.out/demo.outb";
 		if (!_BMR_FAST_Load(outfile))
 			throw Exc(F("Impossible to open file %s", outfile));
 		
@@ -267,7 +267,7 @@ CONSOLE_APP_MAIN
 		Cout() << "\nptfmheave_avg = " << _BMR_FAST_GetAvg(idptfmheave, -1, -1);
 		
 		Cout() << "\n\nLoading InflowWind .dat file";
-		String datfile = AFX(bemFolder, "examples/fast.out/InflowWind.dat");
+		String datfile = bemFolder / "examples/fast.out/InflowWind.dat";
 		if (!_BMR_FAST_LoadFile(datfile))
 			throw Exc(F("Impossible to open file %s", outfile));	
 	
@@ -297,7 +297,7 @@ CONSOLE_APP_MAIN
 		VERIFY(str == "New file");
 
 	#ifdef flagDEBUG	
-		_BMR_FAST_SaveFile(AFX(unittestFolder, "InflowWind_test.dat"));
+		_BMR_FAST_SaveFile(unittestFolder / "InflowWind_test.dat");
 	#endif
 #endif
 	} catch (Exc e) {

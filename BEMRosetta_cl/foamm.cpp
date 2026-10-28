@@ -142,10 +142,10 @@ void Foamm::Get(const UVector<int> &ib0s, const UVector<int> &idfs, const UVecto
 void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double to, const UVector<double> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	Uuid id = Uuid::Create();
-	String folder = AFX(BEM::GetTempFilesFolder(), F(id));
+	String folder = BEM::GetTempFilesFolder() / F(id);
 	if (!DirectoryCreateX(folder))
 		throw Exc(F(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
-	String file = AFX(folder, "temp_file.mat");
+	String file = folder / "temp_file.mat";
 
 	int idf = ib0*6 + _idf;
 	int jdf = ib1*6 + _jdf;

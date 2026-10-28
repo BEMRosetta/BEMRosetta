@@ -1897,7 +1897,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 
 							String file = FileName(command[ic]);
 							if (!FileExists(file)) {
-								file = AFX(file, "OrcFxAPI.dll");
+								file = file / "OrcFxAPI.dll";
 								if (!FileExists(file)) 	
 									throw Exc(F(t_("File '%s' not found"), file)); 
 							}

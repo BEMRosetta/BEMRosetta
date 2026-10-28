@@ -1111,7 +1111,7 @@ bool Aqwa::Load_QTF(double factorMass) {
 	String fileName = ForceExtSafer(dt.file, ".QTF");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) {
-		fileName = AFX(GetFileFolder(fileName), "analysis.qtf"); 
+		fileName = GetFileFolder(fileName) / "analysis.qtf"; 
 		in.Open(fileName);
 		if (!in.IsOpen()) 
 			return false;
@@ -1725,7 +1725,7 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 	if (!DirectoryCreateX(folder))
 		throw Exc(F(t_("Problem creating '%s' folder"), folder));
 	
-	String file = AFX(folder, "Analysis.dat");	
+	String file = folder / "Analysis.dat";	
 	
 	UArray<Body> msh = clone(dt.msh);
 	if (irregular && !autoIrregular) {
@@ -1758,7 +1758,7 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 	Body::SaveAs(msh, files, Body::AQWA_DAT, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z, nNodes, nPanels,
 		dt.w, dt.head, irregular, autoIrregular, qtfType, withPotentials, dt.h, numThreads);
 	
-	String fileBat = AFX(folder, "Aqwa.bat");		
+	String fileBat = folder / "Aqwa.bat";
 	FileOut bat(fileBat);
 	if (!bat)
 		throw Exc(F(t_("Problem creating '%s' file"), fileBat));

@@ -170,7 +170,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 	String ext = GetFileExt(fileName);
 	
 	if (IsLoadedA())  {
-		String files = AFX(folder, nname + "_A" + ext);
+		String files = folder / nname + "_A" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -242,7 +242,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 	}
 	
 	if (IsLoadedB())  {
-		String files = AFX(folder, nname + "_B" + ext);
+		String files = folder / nname + "_B" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -280,7 +280,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 	}
 	
 	if (IsLoadedC())  {
-		String files = AFX(folder, nname + "_C" + ext);
+		String files = folder / nname + "_C" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -290,7 +290,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 	}
 	
 	if (IsLoadedM())  {
-		String files = AFX(folder, nname + "_M" + ext);
+		String files = folder / nname + "_M" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -300,7 +300,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 	}
 	
 	if (IsLoadedFex())  {
-		String files = AFX(folder, nname + "_Fex" + ext);
+		String files = folder / nname + "_Fex" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -309,7 +309,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 	}
 	
 	if (IsLoadedMD())  {
-		String files = AFX(folder, nname + "_MD" + ext);
+		String files = folder / nname + "_MD" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -326,7 +326,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 	String ext = GetFileExt(fileName);
 	
 	if (IsLoadedA())  {
-		String files = AFX(folder, nname + "_A" + ext);
+		String files = folder / nname + "_A" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -389,7 +389,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 	}
 	
 	if (IsLoadedB())  {
-		String files = AFX(folder, nname + "_B" + ext);
+		String files = folder / nname + "_B" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -424,7 +424,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 	}
 	
 	if (IsLoadedC())  {
-		String files = AFX(folder, nname + "_C" + ext);
+		String files = folder / nname + "_C" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -434,7 +434,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 	}
 	
 	if (IsLoadedM())  {
-		String files = AFX(folder, nname + "_M" + ext);
+		String files = folder / nname + "_M" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -444,7 +444,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 	}
 	
 	if (IsLoadedFex())  {
-		String files = AFX(folder, nname + "_Fex" + ext);
+		String files = folder / nname + "_Fex" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -453,7 +453,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 	}	
 	
 	if (IsLoadedMD())  {
-		String files = AFX(folder, nname + "_MD" + ext);
+		String files = folder / nname + "_MD" + ext;
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
@@ -634,7 +634,7 @@ void Hydro::SaveCase(String folder, BEM_FMT solver, bool x0z, bool y0z,
 				GetForcesFromPotentials(dt.pots_inc_bmr, dt.fk_pot_bmr);
 			
 			dt.fk = clone(dt.fk_pot_bmr);
-			static_cast<BemioH5&>(*this).Save(AFX(folder, GetFileTitle(folder) + ".h5"));
+			static_cast<BemioH5&>(*this).Save(folder / GetFileTitle(folder) + ".h5");
 		} else
 			throw Exc(F(t_("Format %d is not supported"), solver));
 	} catch (...) {
@@ -1426,7 +1426,7 @@ void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, co
 				String folder = GetFileFolder(fileName);
 				String name = GetFileTitle(fileName);
 				String ext = GetFileExt(fileName);
-				String fname = AFX(folder, F("%s_%.3f%s", name, dt.w[ifr], ext));
+				String fname = folder / F("%s_%.3f%s", name, dt.w[ifr], ext);
 				SaveFile(fname, grid[ifr].AsString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
 			}
 		} else if (type == ".xlsx") {
@@ -1473,7 +1473,7 @@ void Hydro::SaveAkselos(int ib, String file) const {
 		g.SetRow({"Id", "heading"});
 		for (int ih = 0; ih < dt.Nh; ++ih) 
 			g.SetRow({ih, dt.head[ih]});
-		SaveFile(AFX(folder, F("%s_Headings.csv", file)), g.AsString(false, false, ","));
+		SaveFile(folder / F("%s_Headings.csv", file), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		g.SetRow({"Id", "period"});
@@ -1481,19 +1481,19 @@ void Hydro::SaveAkselos(int ib, String file) const {
 		Sort(T);
 		for (int iT = 0; iT < dt.Nf; ++iT) 
 			g.SetRow({iT, T[iT]});
-		SaveFile(AFX(folder, F("%s_Periods.csv", file)), g.AsString(false, false, ","));
+		SaveFile(folder / F("%s_Periods.csv", file), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		g.SetRow({"Id", "period"});
 		for (int idf = 0; idf < dt.Nf; ++idf) 
 			g.SetRow({idf, dt.w[idf]/2/M_PI});
-		SaveFile(AFX(folder, F("%s_Freq.csv", file)), g.AsString(false, false, ","));
+		SaveFile(folder / F("%s_Freq.csv", file), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		for (int r = 0; r < 6; ++r)
 			for (int c = 0; c < 6; ++c)
 				g.Set(r, c, dt.msh[ib].dt.C(r, c));
-		SaveFile(AFX(folder, "Hydrostatic_Results.csv"), g.AsString(false, false, ","));
+		SaveFile(folder / "Hydrostatic_Results.csv", g.AsString(false, false, ","));
 	}{
 		Grid g;
 		const UVector<String> sdof = {"x", "y", "z"};
@@ -1514,7 +1514,7 @@ void Hydro::SaveAkselos(int ib, String file) const {
 			}
 			g.NextRowLF();
 		}
-		SaveFile(AFX(folder, F("%s_Panel.csv", file)), g.AsString(false, false, ","));
+		SaveFile(folder / F("%s_Panel.csv", file), g.AsString(false, false, ","));
 	}
 	
 	MultiDimMatrixRowMajor<std::complex<double>> rad(6, dt.Nf, dt.msh[ib].dt.mesh.panels.size());
@@ -1534,7 +1534,7 @@ void Hydro::SaveAkselos(int ib, String file) const {
 	nrad.Set(rad);
 	Npy &ndif = npz.Add("diffraction");
 	ndif.Set(dif);
-	npz.Save(AFX(folder, F("%s_Pressure.npz", file)));
+	npz.Save(folder / F("%s_Pressure.npz", file));
 }
 
 void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase, bool relatedToBody, double tolerance, bool rad, bool diff, bool inc) {
@@ -3226,7 +3226,7 @@ bool Hydro::IsHAMS(String file, String &controlfile) {
 	folder = GetFileFolder(folder);			// /Output
 	folder = GetFileFolder(folder);			// /
 	
-	controlfile = AFX(folder, "Input", "ControlFile.in");
+	controlfile = folder / "Input" / "ControlFile.in";
 	if (!FileExists(controlfile))
 		controlfile.Clear();			// It is HAMS, but ControlFile.in is not found
 	

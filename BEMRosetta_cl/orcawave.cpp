@@ -184,7 +184,7 @@ bool OrcaWave::Load_OW_YML() {
 			} else if (fy.FirstIs("BodyMeshFileName")) {
 				String meshname = fy.GetVal();
 				if (!FileExists(meshname))
-					meshname = AFX(GetFileFolder(fileName), meshname);
+					meshname = GetFileFolder(fileName) / meshname;
 			
 				Body::Load(GetMsh(), meshname, rho_ndim(), g_ndim(), Null, Null, false);
 				GetMsh().dt.fileName = meshname;
@@ -196,7 +196,7 @@ bool OrcaWave::Load_OW_YML() {
 				dt.css.SetCount(dt.Nb);
 				String meshname = fy.GetVal();
 				if (!FileExists(meshname))
-					meshname = AFX(GetFileFolder(fileName), meshname);
+					meshname = GetFileFolder(fileName) / meshname;
 			
 				Body::Load(GetCss(), meshname, rho_ndim(), g_ndim(), Null, Null, false);
 				GetCss().dt.fileName = meshname;
@@ -904,8 +904,6 @@ bool OrcaWave::Load_OF_YML() {
 
 void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, UVector<Point3D> &listPoints,
 								bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const {
-	String dampingLid;
-	double dampingFactor = 0.016;
 	bool createQTFFreeSurface = true;
 	bool onlyMeanDrift = qtfType > 10;
 	
@@ -923,20 +921,20 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	if (bin) {
 		String exe = GetExeFilePath();		
 		String ext = GetFileExt(exe);
-		String exe_cl = AFX(GetFileFolder(GetExeFilePath()), exeName + ext);
+		String exe_cl = GetFileFolder(GetExeFilePath()) / exeName + ext;
 		if (FileExists(exe_cl))
-			FileCopy(exe_cl, AFX(folder, exeName + ext));
+			FileCopy(exe_cl, folder / exeName + ext);
 		else {
 			exeName = "bemrosetta";
-			FileCopy(exe, AFX(folder, exeName + ext));
+			FileCopy(exe, folder / exeName + ext);
 		}
 	}
 	if (IsNull(numThreads) || numThreads <= 0)
 		numThreads = 8;
 		
 	String name = GetFileTitle(folder); 
-	String fileYaml = AFX(folder, "OrcaWave.wave.yml");
-	String fileBat  = AFX(folder, "OrcaWave_bat.bat");
+	String fileYaml = folder / "OrcaWave.wave.yml";
+	String fileBat  = folder / "OrcaWave_bat.bat";
 	
 	DirectoryCreate(folder);
 	
@@ -954,14 +952,14 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		const Body &b = dt.msh[ib];
-		Body::SaveAs(b, AFX(folder, F("Body_%d.gdf", ib+1)), Body::WAMIT_GDF, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
+		Body::SaveAs(b, folder / F("Body_%d.gdf", ib+1), Body::WAMIT_GDF, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 		if (irregular && !autoIrregular) {
 			const Body &l = dt.lids[ib];
-			Body::SaveAs(l, AFX(folder, F("Body_%d_lid.gdf", ib+1)), Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);			
+			Body::SaveAs(l, folder / F("Body_%d_lid.gdf", ib+1), Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);			
 		}
 		if (qtfType == 7 && !autoQTF) {
 			const Body &c = dt.css[ib];
-			Body::SaveAs(c, AFX(folder, F("Body_%d_cs.gdf", ib+1)), Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);			
+			Body::SaveAs(c, folder / F("Body_%d_cs.gdf", ib+1), Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);			
 		}
 	}
 	
@@ -997,6 +995,14 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	} else
 		out << 	   "Potential formulation only";
 	out <<  "\n";
+	
+	String dampingLid;
+	if (!dt.standinglid.IsEmpty()) {
+		dampingLid = folder / "Standing_lid.gdf";
+		Body::SaveAs(dt.standinglid, dampingLid, Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);			
+		if (IsNull(dt.epsilon) || dt.epsilon < 0)
+			throw Exc(F(t_("Incorrect standing waves lid coefficient epsilon %f"), dt.epsilon));
+	}
 	
 	out << 	"HasResonanceDampingLid: " << (dampingLid.IsEmpty() ? "No" : "Yes") << "\n"
 			"OutputPanelPressures: " << (withPotentials ? "Yes" : "No") << "\n"
@@ -1197,7 +1203,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 				"DampingLidMeshFileName: " << dampingLid << "\n"
 				"DampingLidMeshFormat: Wamit gdf\n"
 				"DampingLidMeshLengthUnits: m\n"
-				"DampingFactorEpsilon: " << dampingFactor << "\n";	
+				"DampingFactorEpsilon: " << dt.epsilon << "\n";	
 	}
 	
 	if (!onlyMeanDrift && (qtfType == 7 || qtfType == 9)) {

@@ -85,7 +85,7 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 		return ret;
 	} 
 	String fileName;
-	for (FindFile ff(AFX(path, "*.out*")); ff; ff++) {
+	for (FindFile ff(path / "*.out*"); ff; ff++) {
 		if (ff.IsFile()) { 
 			String name = GetFileToLoad(ff.GetPath());
 			if (!IsNull(name) && !IsVoid(name)) {
@@ -98,7 +98,7 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 		ret << fileName;
 		return ret;
 	}
-	for (FindFile ff(AFX(path, "*.*")); ff; ff++) // Search in inner other folders
+	for (FindFile ff(path / "*.*"); ff; ff++) // Search in inner other folders
 		if (ff.IsFolder())
 			ret.Append(GetFilesToLoad(ff.GetPath()));
 
@@ -181,7 +181,7 @@ String FastOut::Load(String file, Function <bool(String, int)> Status) {
 	fileName = file;
 	
 	String prefix = GetFileTitle(file) + ".MD.Line";
-	for (FindFile ff(AFX(GetFileFolder(file), prefix + "*.out")); ff; ff++) {
+	for (FindFile ff(GetFileFolder(file) / prefix + "*.out"); ff; ff++) {
 		String fileLine = ff.GetPath();
 		int numline = ScanInt(ff.GetName().Mid(prefix.GetCount()));
 		FastOut line;
@@ -650,7 +650,7 @@ void FastOut::AfterLoad() {
 	}
 		
 	String folder = GetFileFolder(GetFileName());
-	FindFile ffpath(AFX(folder, "*.fst"));
+	FindFile ffpath(folder / "*.fst");
 	if (ffpath) {
 		FASTCase cas;
 		cas.Load(ffpath.GetPath());
@@ -1396,10 +1396,10 @@ void FASTCase::CreateFolderCase(String folder) {
 	String cas = F("%4d%02d%02d_%02d%02d%02d_%03d", t.year, t.month, t.day, t.hour, t.minute, t.second, rnd);
 	String base;
 	if (folder.IsEmpty())
-		base = AFX(GetAppDataFolder(), "BEMRosetta", "FASTCases");
+		base = GetAppDataFolder() / "BEMRosetta" / "FASTCases";
 	else
 		base = folder;
-	folderCase = AFX(base, cas);
+	folderCase = base / cas;
 	if (!RealizeDirectory(folderCase))
 		throw Exc(F("Impossible to create folder %s", folderCase));
 }
@@ -1412,7 +1412,7 @@ void FASTCase::Setup(String seed, String folderCases) {
 	if (!IsEmpty(errorStr))
 		throw Exc(errorStr);
 	
-	FindFile ffpath(AFX(folderCase, "*.fst"));
+	FindFile ffpath(folderCase / "*.fst");
 	if (!ffpath) 
 		throw Exc(F("No .fst file found in folder '%s'", seed));
 	

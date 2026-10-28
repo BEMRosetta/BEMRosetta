@@ -13,18 +13,18 @@ void HydroStar::SaveCase(String folder, bool /*withPotentials*/, bool x0z, bool 
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 	
-	Save_HSG(AFX(folder, "input.hsg"), autoQTF);
-	Save_MCN(AFX(folder, "input.mcn"));
-	Save_QTF(AFX(folder, "input.qtf"), qtfType, autoQTF);
-	Save_RAO(AFX(folder, "input.rao"), listDOF, qtfType > 0);
-	Save_RDF(AFX(folder, "input.rdf"));
-	Save_DFT(AFX(folder, "input.dft"));
+	Save_HSG(folder / "input.hsg", autoQTF);
+	Save_MCN(folder / "input.mcn");
+	Save_QTF(folder / "input.qtf", qtfType, autoQTF);
+	Save_RAO(folder / "input.rao", listDOF, qtfType > 0);
+	Save_RDF(folder / "input.rdf");
+	Save_DFT(folder / "input.dft");
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		String dest = AFX(folder, F("Body_%d.hst", ib+1));
+		String dest = folder / F("Body_%d.hst", ib+1);
 		Body::SaveAs(dt.msh[ib], dest, Body::HYDROSTAR_HST, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 		if (!autoQTF && qtfType == 7) {
-			dest = AFX(folder, F("Body_cs%d.hst", ib+1));
+			dest = folder / F("Body_cs%d.hst", ib+1);
 			Body::SaveAs(dt.css[ib], dest, Body::HYDROSTAR_HST, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 		}
 	}
@@ -297,7 +297,7 @@ void HydroStar::Save_DFT(String fileName) const {
 bool HydroStar::Load_HDF(Wamit &wam, Function <bool(String, int)> Status) {
 	Status("Loading HDF file", Null);
 	
-	FindFile ff(AFX(GetFileFolder(wam.dt.file), "*.hdf"));
+	FindFile ff(GetFileFolder(wam.dt.file) / "*.hdf");
 	if (!ff)
 		return false;
 	
@@ -348,7 +348,7 @@ bool HydroStar::Load_HDF(Wamit &wam, Function <bool(String, int)> Status) {
 		hfile.UpGroup();
 	}
 
-	FindFile ff2(AFX(GetFileFolder(wam.dt.file), "*.hst"));
+	FindFile ff2(GetFileFolder(wam.dt.file) / "*.hst");
 	if (!ff2)
 		throw Exc (t_("Mesh data (.hst file) not found"));
 	
@@ -460,7 +460,7 @@ bool HydroStar::Load_MCN(String fileName, int nb, UVector<Point3D> &refPoint, UV
 		return false;
 	
 	String folder = GetFileFolder(fileName);
-	FindFile mcn(AFX(folder, "*.mcn"));
+	FindFile mcn(folder / "*.mcn");
 	if (!mcn)
 		return false;
 	

@@ -68,6 +68,8 @@ void MainBEM::Init() {
 			menuOpen.dropExport.Add(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)));
 	menuOpen.dropExport.SetIndex(dropExportId);
 
+	menuOpen.opSymmetrize.Tip(t_(t_("Ensures symmetry in added mass, radiation and QTF")));
+
 	CtrlLayout(menuProcess);
 	menuProcess.butSym.Disable();	
 	menuProcess.butSym <<= THISBACK(OnSymmetrizeForces);
@@ -750,6 +752,9 @@ void MainBEM::InitSerialize(bool ret) {
 	
 	if (!ret || IsNull(menuPlot.showNdim)) 
 		menuPlot.showNdim = false;
+
+	if (!ret || IsNull(menuOpen.opSymmetrize)) 
+		menuOpen.opSymmetrize = false;	
 }
 
 void MainBEM::LoadSelTab(BEM &bem) {
@@ -971,6 +976,7 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butRename.Enable(numsel == 1 || numrow == 1);
 	menuOpen.butSolve.Enable(numsel == 1 || numrow == 1);
 	menuOpen.dropExport.Enable(numsel == 1);
+	menuOpen.opSymmetrize.Enable(numsel == 1);
 	menuOpen.butExport.Enable(numsel == 1);
 
 	menuProcess.butSym.			Enable((numsel == 1 || numrow == 1) && (int)menuProcess.dropSym.GetData() > 0);
@@ -1311,9 +1317,9 @@ void MainBEM::OnEdit() {
 			CtrlLayout(b);
 			Body::Data &d = Bem().hydros[idx].dt.msh[ib].dt;
 			bodies.selector.Add(b.SizePos(), d.name);
-			MatrixXdToGridCtrl(b.Dlin,  d.Dlin, 6, 6, 0);
+			MatrixXdToGridCtrl(b.Dlin,  d.Dlin,  6, 6, 0);
 			MatrixXdToGridCtrl(b.Dquad, d.Dquad, 6, 6, 0);
-			MatrixXdToGridCtrl(b.Cadd,  Bem().hydros[idx].Cadd_mat(false, ib), 6, 6, 0);
+			MatrixXdToGridCtrl(b.Cadd,  Bem().hydros[idx].Cadd_mat (false, ib), 6, 6, 0);
 			MatrixXdToGridCtrl(b.Cmoor, Bem().hydros[idx].Cmoor_mat(false, ib), 6, 6, 0);
 		}
 		bodies.selector.SetWidth(80);
@@ -2536,7 +2542,7 @@ void MainBEM::OnConvert() {
 				progress.SetText(str); 
 			if (_pos >= 0)
 				progress.SetPos(_pos); 
-			return !progress.Canceled();}, type, qtfHeading, mainBody.GetIb(), heading);
+			return !progress.Canceled();}, type, qtfHeading, mainBody.GetIb(), heading, ~menuOpen.opSymmetrize);
 			
 		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {
@@ -2596,6 +2602,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		menuPlot.opBpot = Null;
 		menuPlot.opFfkpot = Null;
 		menuPlot.opFscpot = Null;	
+		menuOpen.opSymmetrize = Null;
 		dropExportId = 2;
 		menuProcess.opFill = Null;
 		menuProcess.maxFreq = Null;
@@ -2612,6 +2619,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuPlot_opMP", menuPlot.opMP)
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showNdim", menuPlot.showNdim)
+		("menuOpen_opSymmetrize", menuOpen.opSymmetrize)
 		("menuProcess_opZremoval", menuAdvanced.opZremoval)
 		("menuProcess_opThinremoval", menuAdvanced.opThinremoval)
 		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
@@ -2644,7 +2652,7 @@ String MainBEM::BEMFile(String fileFolder) const {
 		return "";
 	if (DirectoryExists(fileFolder)) {
 		int bestipos = INT_MAX;
-		for (FindFile ff(AFX(fileFolder, "*.*")); ff; ff++) {
+		for (FindFile ff(fileFolder / "*.*"); ff; ff++) {
 			if (ff.IsFile()) {
 				String name = ToLower(ff.GetName());
 				if (GetFileExt(name) == ".bemr")
@@ -2659,7 +2667,7 @@ String MainBEM::BEMFile(String fileFolder) const {
 					bestipos = ipos;	// It takes the file with most probable extension
 				}
 			} else if (ff.IsFolder() && ff.GetName() == "Input") {
-				String controlFile = AFX(ff.GetPath(), "ControlFile.in");
+				String controlFile = ff.GetPath() / "ControlFile.in";
 				if (FileExists(controlFile))
 					return controlFile;
 			}
@@ -2674,7 +2682,7 @@ void MainBEM::LoadDragDrop() {
 	if (filesToDrop.size() == 1 && DirectoryExists(First(filesToDrop))) {	// If a folder is dropped, all the files are included
 		String folder = First(filesToDrop);
 		filesToDrop.Clear();
-		for (FindFile ff(AFX(folder, "*.*")); ff; ff++) {
+		for (FindFile ff(folder / "*.*"); ff; ff++) {
 			if (ff.IsFile())
 				filesToDrop << ff.GetPath();
 		}

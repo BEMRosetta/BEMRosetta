@@ -697,7 +697,7 @@ String Diffrac::LoadCase(String file) {
 			DiffracData::Body &b = data.bodies[ib];		
 			Body &msh = dt.msh[ib];
 			
-			Body::Load(msh, AFX(folder, b.meshFn), dt.rho, Bem().g, Null, Null, false);
+			Body::Load(msh, folder / b.meshFn, dt.rho, Bem().g, Null, Null, false);
 			if (msh.dt.mesh.IsEmpty())
 				return F(t_("Impossible to load mesh file %s"), b.meshFn);
 			
@@ -729,7 +729,7 @@ String Diffrac::LoadCase(String file) {
 		}
 		if (!data.parDBRESP.springMatrix.fileName.IsEmpty()) {
 			MatrixXd d(6*dt.Nb, 6*dt.Nb);
-			FileInLine in(AFX(folder, data.parDBRESP.springMatrix.fileName));
+			FileInLine in(folder / data.parDBRESP.springMatrix.fileName);
 			if (!in.IsOpen())
 				return F(t_("Imposssible to open stiffness matrix file %s"), data.parDBRESP.springMatrix.fileName);
 			
@@ -746,7 +746,7 @@ String Diffrac::LoadCase(String file) {
 		}
 		if (!data.parDBRESP.dampingMatrix.fileName.IsEmpty()) {
 			MatrixXd d(6*dt.Nb, 6*dt.Nb);
-			FileInLine in(AFX(folder, data.parDBRESP.dampingMatrix.fileName));
+			FileInLine in(folder / data.parDBRESP.dampingMatrix.fileName);
 			if (!in.IsOpen())
 				return F(t_("Imposssible to open damping matrix file %s"), data.parDBRESP.dampingMatrix.fileName);
 			
@@ -800,7 +800,7 @@ void Diffrac::SaveCase(String folder, int numThreads, bool withPotentials, bool 
 		}
 	}
 	if (thereIsStiffness) {
-		FileOut fs(AFX(folder, "springMatrix.txt"));
+		FileOut fs(folder / "springMatrix.txt");
 		if (!fs.IsOpen())
 			throw Exc("Cannot save springMatrix.txt");
 		for (int row = 0; row < 6*dt.Nb; ++row) {
@@ -828,7 +828,7 @@ void Diffrac::SaveCase(String folder, int numThreads, bool withPotentials, bool 
 		}
 	}
 	if (thereIsDamping) {
-		FileOut fs(AFX(folder, "dampingMatrix.txt"));
+		FileOut fs(folder / "dampingMatrix.txt");
 		if (!fs.IsOpen())
 			throw Exc("Cannot save dampingMatrix.txt");
 		for (int row = 0; row < 6*dt.Nb; ++row) {
@@ -905,7 +905,7 @@ void Diffrac::SaveCase(String folder, int numThreads, bool withPotentials, bool 
 		DiffracData::Body &b = data.bodies[ib];
 		
 		b.meshFn = F("Body_%d.vtk", ib+1);
-		String dest = AFX(folder, b.meshFn);
+		String dest = folder / b.meshFn;
 		
 		bodies[ib] = clone(dt.msh[ib]);
 		bool isLid = irregular && dt.lids.size() > ib && !dt.lids[ib].dt.mesh.panels.IsEmpty();
@@ -939,11 +939,11 @@ void Diffrac::SaveCase(String folder, int numThreads, bool withPotentials, bool 
 			}
 		}
 		if (save) {
-			String dest = AFX(folder, F("Body_%d.vtk", ib+1));
+			String dest = folder / F("Body_%d.vtk", ib+1);
 			Body::SaveAs(bodies[ib], dest, Body::VTK_ASCII_4, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 		}
 	}
-	SaveFile(AFX(folder, "diffrac.xml"), data.SaveXML());				
+	SaveFile(folder / "diffrac.xml", data.SaveXML());				
 }
 
 String Diffrac::Load(String file, double) {

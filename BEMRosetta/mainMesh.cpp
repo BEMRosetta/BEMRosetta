@@ -516,7 +516,7 @@ void MainBody::Init() {
 	splitterAll.Tip("").WhenAction = [&] {mainView.SetPaintSelect(splitterAll.GetPos() < 9900);};
 	mainTab.Add(splitterAll.SizePos(), t_("View"));
 	
-	String bitmapFolder = AFX(GetDesktopFolder(), "BEMRosetta Body Images");
+	String bitmapFolder = GetDesktopFolder() / "BEMRosetta Body Images";
 	int idBitmapFolder = 0;
 	
 	mainSummary.Init();
